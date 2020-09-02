@@ -1,0 +1,5 @@
+MAPMAGIC IMPORTED HEIGHTMAP INSTRUCTIONS
+
+1. inside "MapMagic" folder inside Assets create a MapMagic > Imported Map and load the raw file
+2. create an "Empty Graph" and open it
+3. create an "Import" node in the graph and link it to "Height" node
