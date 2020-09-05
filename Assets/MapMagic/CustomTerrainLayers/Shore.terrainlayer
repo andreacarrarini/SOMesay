@@ -7,8 +7,8 @@ TerrainLayer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Shore
-  m_DiffuseTexture: {fileID: 2800000, guid: 02b230a6dbc126f49ac17778565ed96e, type: 3}
-  m_NormalMapTexture: {fileID: 2800000, guid: 249658be85c3a614fb5a8d8eb3cf0f52, type: 3}
+  m_DiffuseTexture: {fileID: 2800000, guid: 573734e01a86b9d40b6c8dc8d74a1932, type: 3}
+  m_NormalMapTexture: {fileID: 2800000, guid: 573734e01a86b9d40b6c8dc8d74a1932, type: 3}
   m_MaskMapTexture: {fileID: 0}
   m_TileSize: {x: 64, y: 64}
   m_TileOffset: {x: 0, y: 0}
