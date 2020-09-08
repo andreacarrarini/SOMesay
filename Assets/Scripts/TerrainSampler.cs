@@ -33,7 +33,11 @@ public class TerrainSampler : MonoBehaviour
     private Vector3 samplingStartingPoint;
     private Vector3[,] visualSomMatrix;                                                             // The matrix of points sampled (used to spawn visual objects)
     private GameObject[,] neuronPointsMatrix;
-    private GameObject[,] neuronLinksMatrix;
+    private GameObject[,] horizontalNeuronLinksMatrix;
+    private GameObject[,] verticalNeuronLinksMatrix;
+    private float linkLength;                                                                       // The length of the link between 2 neurons
+    private float neuronPointScale;                                                                 // The scale of the sphere in Unity
+    private float som3DNetHeight = 300;                                                             // The height offset of the 3D net
 
     void Start()
     {
@@ -106,7 +110,6 @@ public class TerrainSampler : MonoBehaviour
                 bottomLeftCorner = tileTransform.position;
         }
         samplingStartingPoint = bottomLeftCorner;
-        return;
     }
 
     public void SomTrainLauncher()                                                                  // Launches the SOM training
@@ -118,29 +121,100 @@ public class TerrainSampler : MonoBehaviour
     public void PrepareSomNet3D()
     {
         GameObject neuronPoint = ( GameObject ) Resources.Load( "NeuronPoint" );
-        GameObject neuronLink = ( GameObject ) Resources.Load( "NeuronLink" );
+        GameObject neuronLink = ( GameObject ) Resources.Load( "NeuronLinkFather" );
         visualSomMatrix = new Vector3[ inputVectorDimension , inputVectorDimension ];
         neuronPointsMatrix = new GameObject[ inputVectorDimension , inputVectorDimension ];
-        neuronLinksMatrix = new GameObject[ inputVectorDimension , inputVectorDimension ];
+        horizontalNeuronLinksMatrix = new GameObject[ inputVectorDimension , inputVectorDimension ];
+        verticalNeuronLinksMatrix = new GameObject[ inputVectorDimension , inputVectorDimension ];
 
         for ( int i = 0; i < inputVectorDimension; i++ )
         {
             for ( int j = 0; j < inputVectorDimension; j++ )
             {
                 neuronPointsMatrix[ i , j ] = Instantiate( neuronPoint , new Vector3( 0 , 0 , 0 ) , Quaternion.identity );
-                neuronLinksMatrix[ i , j ] = Instantiate( neuronLink , new Vector3( 0 , 0 , 0 ) , Quaternion.identity );
+                horizontalNeuronLinksMatrix[ i , j ] = Instantiate( neuronLink , new Vector3( 0 , 0 , 0 ) , Quaternion.identity );
+                verticalNeuronLinksMatrix[ i , j ] = Instantiate( neuronLink , new Vector3( 0 , 0 , 0 ) , Quaternion.identity );
             }
         }
     }
 
     public void BuildSom3DNet()
     {
+        //linkLength = tileDimension / tileSubdivision;                                               // Roughly
+        linkLength = 10;
+        neuronPointScale = 20;
+
         for ( int i = 0; i < inputVectorDimension; i++ )
         {
             for ( int j = 0; j < inputVectorDimension; j++ )
             {
-                visualSomMatrix[ i , j ].y += 200;
+                // NEURONS
+                //visualSomMatrix[ i , j ].y += som3DNetHeight;
+
                 neuronPointsMatrix[ i , j ].transform.position = visualSomMatrix[ i , j ];
+                neuronPointsMatrix[ i , j ].transform.localScale = new Vector3( neuronPointScale , neuronPointScale , neuronPointScale );
+
+                // LINKS
+                Vector3 horizontalLinkNewPosition;                                                  // The position ehre the horizontal link should be (between two neuron points)                       
+                Vector3 verticalLinkNewPosition;                                                    // Same but vertical link
+                Vector3 horizontalLinkDirection = new Vector3();                                    // The direction of the vector from a neuron point to his right neighbour
+                Vector3 verticalLinkDirection = new Vector3();                                      // The direction of the vector from a neuron point to his front neighbour
+
+                horizontalLinkNewPosition = visualSomMatrix[ i , j ];                               // To get the y
+                verticalLinkNewPosition = visualSomMatrix[ i , j ];
+
+                if ( i + 1 < inputVectorDimension && j + 1 < inputVectorDimension )
+                {
+                    horizontalLinkNewPosition = (visualSomMatrix[ i , j ] + visualSomMatrix[ i + 1 , j ]) / 2;
+                    //horizontalLinkNewPosition.x = (visualSomMatrix[ i , j ].x + visualSomMatrix[ i + 1 , j ].x) / 2;
+                    //horizontalLinkNewPosition.y = (visualSomMatrix[ i , j ].y + visualSomMatrix[ i + 1 , j ].y) / 2;
+                    //horizontalLinkNewPosition.y = (visualSomMatrix[ i , j ].y + visualSomMatrix[ i + 1 , j ].y) / 2 + som3DNetHeight / 2;
+
+                    verticalLinkNewPosition = (visualSomMatrix[ i , j ] + visualSomMatrix[ i , j + 1 ]) / 2;
+                    //verticalLinkNewPosition.z = (visualSomMatrix[ i , j ].z + visualSomMatrix[ i , j + 1 ].z) / 2;
+                    //verticalLinkNewPosition.y = (visualSomMatrix[ i , j ].y + visualSomMatrix[ i , j + 1 ].y) / 2;
+                    //verticalLinkNewPosition.y = (visualSomMatrix[ i , j ].y + visualSomMatrix[ i , j + 1 ].y) / 2 + som3DNetHeight / 2;
+
+                    horizontalLinkDirection = visualSomMatrix[ i + 1 , j ] - visualSomMatrix[ i , j ];
+                    verticalLinkDirection = visualSomMatrix[ i , j + 1 ] - visualSomMatrix[ i , j ];
+
+                    //horizontalLinkDirection = visualSomMatrix[ i , j ] - visualSomMatrix[ i + 1 , j ];
+                    //verticalLinkDirection = visualSomMatrix[ i , j ] - visualSomMatrix[ i , j + 1 ];
+
+
+                    //horizontalLinkDirection = neuronPointsMatrix[ i + 1 , j ].transform.position;
+                    //verticalLinkDirection = neuronPointsMatrix[ i , j + 1 ].transform.position;
+                }
+
+                // Changing their position
+                horizontalNeuronLinksMatrix[ i , j ].transform.position = horizontalLinkNewPosition;
+                verticalNeuronLinksMatrix[ i , j ].transform.position = verticalLinkNewPosition;
+
+                // Changing their rotation
+                //horizontalNeuronLinksMatrix[ i , j ].transform.rotation = Quaternion.FromToRotation( horizontalNeuronLinksMatrix[i,j].transform.right , horizontalLinkDirection - visualSomMatrix[ i , j ] );
+                //verticalNeuronLinksMatrix[ i , j ].transform.rotation = Quaternion.FromToRotation( Vector3.up , horizontalLinkDirection - visualSomMatrix[ i , j ] );
+
+                horizontalNeuronLinksMatrix[ i , j ].transform.rotation = Quaternion.LookRotation( horizontalLinkDirection , horizontalNeuronLinksMatrix[ i , j ].transform.forward );
+                //horizontalNeuronLinksMatrix[ i , j ].transform.rotation = Quaternion.LookRotation( horizontalLinkNewPosition , Vector3.right );
+                verticalNeuronLinksMatrix[ i , j ].transform.rotation = Quaternion.LookRotation( verticalLinkDirection , horizontalNeuronLinksMatrix[ i , j ].transform.forward );
+                //verticalNeuronLinksMatrix[ i , j ].transform.rotation = Quaternion.LookRotation( verticalLinkNewPosition , Vector3.right );
+
+                // Changinge their scale
+                horizontalNeuronLinksMatrix[ i , j ].transform.localScale = new Vector3( 5 , 5 , 50 );
+                verticalNeuronLinksMatrix[ i , j ].transform.localScale = new Vector3( 5 , 5 , 50 );
+
+                // Raising everything at the end
+                Vector3 raisedPosition = neuronPointsMatrix[ i , j ].transform.position;
+                raisedPosition.y += som3DNetHeight;
+                neuronPointsMatrix[ i , j ].transform.position = raisedPosition;
+
+                raisedPosition = horizontalNeuronLinksMatrix[ i , j ].transform.position;
+                raisedPosition.y += som3DNetHeight;
+                horizontalNeuronLinksMatrix[ i , j ].transform.position = raisedPosition;
+
+                raisedPosition = verticalNeuronLinksMatrix[ i , j ].transform.position;
+                raisedPosition.y += som3DNetHeight;
+                verticalNeuronLinksMatrix[ i , j ].transform.position = raisedPosition;
             }
         }
     }
