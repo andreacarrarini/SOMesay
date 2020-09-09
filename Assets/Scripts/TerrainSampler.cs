@@ -64,7 +64,6 @@ public class TerrainSampler : MonoBehaviour
 
         for ( int i = 0; i < inputVectorDimension; i++ )
         {
-
             Vector inputVectorToInsert = ( Vector ) Vector.DeepClone( inputVector );
             inputMatrix[ i ] = inputVectorToInsert;
         }
@@ -88,6 +87,7 @@ public class TerrainSampler : MonoBehaviour
                         pointToSample.Set( xOffset + i * tileDimension + iTile * (tileDimension / tileSubdivision) , 0f ,
                             zOffset + j * tileDimension + jTile * (tileDimension / tileSubdivision) );
 
+                        // TODO: Test if the map magic terrain needs the camera moving with this script in order to sample everything correctly
                         pointToSample.y = Terrain.activeTerrain.SampleHeight( pointToSample );
 
                         visualSomMatrix[ i * tileSubdivision + iTile , j * tileSubdivision + jTile ] = pointToSample;
@@ -109,6 +109,10 @@ public class TerrainSampler : MonoBehaviour
             if ( tileTransform.position.x <= bottomLeftCorner.x && tileTransform.position.z <= bottomLeftCorner.z )
                 bottomLeftCorner = tileTransform.position;
         }
+        print( bottomLeftCorner );                                                                  // DEBUG
+
+        bottomLeftCorner.x -= tileDimension / 2;
+        bottomLeftCorner.z -= tileDimension / 2;
         samplingStartingPoint = bottomLeftCorner;
     }
 
@@ -149,8 +153,6 @@ public class TerrainSampler : MonoBehaviour
             for ( int j = 0; j < inputVectorDimension; j++ )
             {
                 // NEURONS
-                //visualSomMatrix[ i , j ].y += som3DNetHeight;
-
                 neuronPointsMatrix[ i , j ].transform.position = visualSomMatrix[ i , j ];
                 neuronPointsMatrix[ i , j ].transform.localScale = new Vector3( neuronPointScale , neuronPointScale , neuronPointScale );
 
@@ -166,24 +168,10 @@ public class TerrainSampler : MonoBehaviour
                 if ( i + 1 < inputVectorDimension && j + 1 < inputVectorDimension )
                 {
                     horizontalLinkNewPosition = (visualSomMatrix[ i , j ] + visualSomMatrix[ i + 1 , j ]) / 2;
-                    //horizontalLinkNewPosition.x = (visualSomMatrix[ i , j ].x + visualSomMatrix[ i + 1 , j ].x) / 2;
-                    //horizontalLinkNewPosition.y = (visualSomMatrix[ i , j ].y + visualSomMatrix[ i + 1 , j ].y) / 2;
-                    //horizontalLinkNewPosition.y = (visualSomMatrix[ i , j ].y + visualSomMatrix[ i + 1 , j ].y) / 2 + som3DNetHeight / 2;
-
                     verticalLinkNewPosition = (visualSomMatrix[ i , j ] + visualSomMatrix[ i , j + 1 ]) / 2;
-                    //verticalLinkNewPosition.z = (visualSomMatrix[ i , j ].z + visualSomMatrix[ i , j + 1 ].z) / 2;
-                    //verticalLinkNewPosition.y = (visualSomMatrix[ i , j ].y + visualSomMatrix[ i , j + 1 ].y) / 2;
-                    //verticalLinkNewPosition.y = (visualSomMatrix[ i , j ].y + visualSomMatrix[ i , j + 1 ].y) / 2 + som3DNetHeight / 2;
 
                     horizontalLinkDirection = visualSomMatrix[ i + 1 , j ] - visualSomMatrix[ i , j ];
                     verticalLinkDirection = visualSomMatrix[ i , j + 1 ] - visualSomMatrix[ i , j ];
-
-                    //horizontalLinkDirection = visualSomMatrix[ i , j ] - visualSomMatrix[ i + 1 , j ];
-                    //verticalLinkDirection = visualSomMatrix[ i , j ] - visualSomMatrix[ i , j + 1 ];
-
-
-                    //horizontalLinkDirection = neuronPointsMatrix[ i + 1 , j ].transform.position;
-                    //verticalLinkDirection = neuronPointsMatrix[ i , j + 1 ].transform.position;
                 }
 
                 // Changing their position
@@ -191,13 +179,8 @@ public class TerrainSampler : MonoBehaviour
                 verticalNeuronLinksMatrix[ i , j ].transform.position = verticalLinkNewPosition;
 
                 // Changing their rotation
-                //horizontalNeuronLinksMatrix[ i , j ].transform.rotation = Quaternion.FromToRotation( horizontalNeuronLinksMatrix[i,j].transform.right , horizontalLinkDirection - visualSomMatrix[ i , j ] );
-                //verticalNeuronLinksMatrix[ i , j ].transform.rotation = Quaternion.FromToRotation( Vector3.up , horizontalLinkDirection - visualSomMatrix[ i , j ] );
-
                 horizontalNeuronLinksMatrix[ i , j ].transform.rotation = Quaternion.LookRotation( horizontalLinkDirection , horizontalNeuronLinksMatrix[ i , j ].transform.forward );
-                //horizontalNeuronLinksMatrix[ i , j ].transform.rotation = Quaternion.LookRotation( horizontalLinkNewPosition , Vector3.right );
                 verticalNeuronLinksMatrix[ i , j ].transform.rotation = Quaternion.LookRotation( verticalLinkDirection , horizontalNeuronLinksMatrix[ i , j ].transform.forward );
-                //verticalNeuronLinksMatrix[ i , j ].transform.rotation = Quaternion.LookRotation( verticalLinkNewPosition , Vector3.right );
 
                 // Changinge their scale
                 horizontalNeuronLinksMatrix[ i , j ].transform.localScale = new Vector3( 5 , 5 , 50 );
