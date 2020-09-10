@@ -27,7 +27,7 @@ public class TerrainSampler : MonoBehaviour
     private int inputVectorDimension = 50;                                                          // The dimension and the number of each input vector for the SOM
     private int numberOfIterations = 100;
     private double leariningRate = 0.5;
-    private int matrixSideLength = 50;                                                              // The length of the side (square) of the SOM (how many neurons in heigth and length)
+    private int matrixSideLength = 25;                                                              // The length of the side (square) of the SOM (how many neurons in heigth and length)
     private Vector[] inputMatrix;                                                                   // The SOM input matrix (list of list of vectors)
     private Vector3 pointToSample;                                                                  // The position used to sample the height of each point required
     private Vector3 samplingStartingPoint;
@@ -74,6 +74,7 @@ public class TerrainSampler : MonoBehaviour
         pointToSample = new Vector3();
         float xOffset = samplingStartingPoint.x;                                                    // To make it independent from the tile positioning
         float zOffset = samplingStartingPoint.z;
+        Terrain[] terrains = Terrain.activeTerrains;                                                // Array of all active terrains
 
         for ( int i = 0; i < somDimensionInTiles; i++ )
         {
@@ -83,12 +84,19 @@ public class TerrainSampler : MonoBehaviour
                 {
                     for ( int jTile = 0; jTile < tileSubdivision; jTile++ )
                     {
+                        int terrainIndex = 0;
+
                         // SAMPLING
                         pointToSample.Set( xOffset + i * tileDimension + iTile * (tileDimension / tileSubdivision) , 0f ,
                             zOffset + j * tileDimension + jTile * (tileDimension / tileSubdivision) );
 
-                        // TODO: Test if the map magic terrain needs the camera moving with this script in order to sample everything correctly
-                        pointToSample.y = Terrain.activeTerrain.SampleHeight( pointToSample );
+                        while ( terrains[ terrainIndex ].transform.position.x > pointToSample.x || pointToSample.x - terrains[ terrainIndex ].transform.position.x >= tileDimension
+                            || terrains[ terrainIndex ].transform.position.z > pointToSample.z || pointToSample.z - terrains[ terrainIndex ].transform.position.z >= tileDimension )
+                        {
+                            terrainIndex++;                                                         // Looking for the correct terrain to sample
+                        }
+
+                        pointToSample.y = terrains[ terrainIndex ].SampleHeight( pointToSample );
 
                         visualSomMatrix[ i * tileSubdivision + iTile , j * tileSubdivision + jTile ] = pointToSample;
 
@@ -109,16 +117,13 @@ public class TerrainSampler : MonoBehaviour
             if ( tileTransform.position.x <= bottomLeftCorner.x && tileTransform.position.z <= bottomLeftCorner.z )
                 bottomLeftCorner = tileTransform.position;
         }
-        print( bottomLeftCorner );                                                                  // DEBUG
 
-        bottomLeftCorner.x -= tileDimension / 2;
-        bottomLeftCorner.z -= tileDimension / 2;
         samplingStartingPoint = bottomLeftCorner;
     }
 
     public void SomTrainLauncher()                                                                  // Launches the SOM training
     {
-        var som = new SOMap( 2 , 2 , inputVectorDimension , numberOfIterations , leariningRate );
+        var som = new SOMap( matrixSideLength , matrixSideLength , inputVectorDimension , numberOfIterations , leariningRate );
         som.Train( inputMatrix );
     }
 
