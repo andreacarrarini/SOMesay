@@ -24,11 +24,11 @@ public class TerrainSampler : MonoBehaviour
     private int somDimensionInTiles = 5;                                                            // The dimension of the terrain, in tiles, that the SOM has to analyze
     private int tileDimension = 1000;                                                               // The tile dimension in world's unit
     private int tileSubdivision = 10;                                                               // How many input vectors a tile contains
-    private int inputVectorDimension = 50;                                                          // The dimension and the number of each input vector for the SOM
-    private int numberOfIterations = 100;
+    private int samplingVectorDimension = 50;                                                       // The dimension and the number of each sampling vector
+    private int numberOfIterations = 10;
     private double leariningRate = 0.5;
     private int matrixSideLength = 25;                                                              // The length of the side (square) of the SOM (how many neurons in heigth and length)
-    private Vector[] inputMatrix;                                                                   // The SOM input matrix (list of list of vectors)
+    private Vector[] inputMatrix;                                                                   // The SOM input matrix (list of vectors)
     private Vector3 pointToSample;                                                                  // The position used to sample the height of each point required
     private Vector3 samplingStartingPoint;
     private Vector3[,] visualSomMatrix;                                                             // The matrix of points sampled (used to spawn visual objects)
@@ -38,6 +38,7 @@ public class TerrainSampler : MonoBehaviour
     private float linkLength;                                                                       // The length of the link between 2 neurons
     private float neuronPointScale;                                                                 // The scale of the sphere in Unity
     private float som3DNetHeight = 300;                                                             // The height offset of the 3D net
+    private SOMap soMap;                                                                            // The actual SOM
 
     void Start()
     {
@@ -45,24 +46,28 @@ public class TerrainSampler : MonoBehaviour
 
         GetBottomLeftCorner();
 
-        PrepareSomNet3D();
+        PrepareRealSomNet3D();
+        //PrepareSomNet3D();
 
         Sampling();
 
-        BuildSom3DNet();
+        SomTrainLauncher();
+
+        BuildRealSom3DNet();
+        //BuildSom3DNet();
     }
 
     public void PrepareInputMatrix()                                                                // Prepares the Input Matrix
     {
-        inputMatrix = new Vector[ inputVectorDimension ];
+        inputMatrix = new Vector[ samplingVectorDimension * samplingVectorDimension ];
         Vector inputVector = new Vector();
 
-        for ( int i = 0; i < inputVectorDimension; i++ )
+        for ( int i = 0; i < 3; i++ )                                                               // 3 is the dimension of a Vector3
         {
             inputVector.Add( i );                                                                   // Initializing the base inputVector
         }
 
-        for ( int i = 0; i < inputVectorDimension; i++ )
+        for ( int i = 0; i < samplingVectorDimension * samplingVectorDimension; i++ )
         {
             Vector inputVectorToInsert = ( Vector ) Vector.DeepClone( inputVector );
             inputMatrix[ i ] = inputVectorToInsert;
@@ -98,9 +103,11 @@ public class TerrainSampler : MonoBehaviour
 
                         pointToSample.y = terrains[ terrainIndex ].SampleHeight( pointToSample );
 
-                        visualSomMatrix[ i * tileSubdivision + iTile , j * tileSubdivision + jTile ] = pointToSample;
+                        //visualSomMatrix[ i * tileSubdivision + iTile , j * tileSubdivision + jTile ] = pointToSample;
 
-                        inputMatrix[ i * tileSubdivision + iTile ][ j * tileSubdivision + jTile ] = pointToSample.y;
+                        inputMatrix[ i * tileSubdivision + iTile + j * tileSubdivision + jTile ][0] = pointToSample.x;
+                        inputMatrix[ i * tileSubdivision + iTile + j * tileSubdivision + jTile ][1] = pointToSample.y;
+                        inputMatrix[ i * tileSubdivision + iTile + j * tileSubdivision + jTile ][2] = pointToSample.z;
                     }
                 }
             }
@@ -123,26 +130,121 @@ public class TerrainSampler : MonoBehaviour
 
     public void SomTrainLauncher()                                                                  // Launches the SOM training
     {
-        var som = new SOMap( matrixSideLength , matrixSideLength , inputVectorDimension , numberOfIterations , leariningRate );
-        som.Train( inputMatrix );
+        soMap = new SOMap( matrixSideLength , matrixSideLength , 3 , numberOfIterations , leariningRate, this );
+        soMap.SetNeuronsWorldPositions( matrixSideLength , somDimensionInTiles , tileDimension , samplingStartingPoint.x , samplingStartingPoint.z , som3DNetHeight );
+        soMap.Train( inputMatrix );
+    }
+
+    public void PrintSomWeights()                                                                   // DEBUG
+    {
+        for ( int _i = 0; _i < matrixSideLength; _i++ )
+        {
+            for ( int _j = 0; _j < matrixSideLength; _j++ )
+            {
+                print( soMap._matrix[ _i , _j ].Weights[ 0 ] );
+                print( soMap._matrix[ _i , _j ].Weights[ 1 ] );
+                print( soMap._matrix[ _i , _j ].Weights[ 2 ] );
+            }
+        }
+    }
+
+    public void PrepareRealSomNet3D()                                                               // Prepares the Som matrix 3D net in scene
+    {
+        GameObject neuronPoint = ( GameObject ) Resources.Load( "NeuronPoint" );
+        GameObject neuronLink = ( GameObject ) Resources.Load( "NeuronLinkFather" );
+        visualSomMatrix = new Vector3[ matrixSideLength , matrixSideLength ];
+        neuronPointsMatrix = new GameObject[ matrixSideLength , matrixSideLength ];
+        horizontalNeuronLinksMatrix = new GameObject[ matrixSideLength , matrixSideLength ];
+        verticalNeuronLinksMatrix = new GameObject[ matrixSideLength , matrixSideLength ];
+
+        for ( int i = 0; i < matrixSideLength; i++ )
+        {
+            for ( int j = 0; j < matrixSideLength; j++ )
+            {
+                neuronPointsMatrix[ i , j ] = Instantiate( neuronPoint , new Vector3( 0 , 0 , 0 ) , Quaternion.identity );
+                horizontalNeuronLinksMatrix[ i , j ] = Instantiate( neuronLink , new Vector3( 0 , 0 , 0 ) , Quaternion.identity );
+                verticalNeuronLinksMatrix[ i , j ] = Instantiate( neuronLink , new Vector3( 0 , 0 , 0 ) , Quaternion.identity );
+            }
+        }
     }
 
     public void PrepareSomNet3D()
     {
         GameObject neuronPoint = ( GameObject ) Resources.Load( "NeuronPoint" );
         GameObject neuronLink = ( GameObject ) Resources.Load( "NeuronLinkFather" );
-        visualSomMatrix = new Vector3[ inputVectorDimension , inputVectorDimension ];
-        neuronPointsMatrix = new GameObject[ inputVectorDimension , inputVectorDimension ];
-        horizontalNeuronLinksMatrix = new GameObject[ inputVectorDimension , inputVectorDimension ];
-        verticalNeuronLinksMatrix = new GameObject[ inputVectorDimension , inputVectorDimension ];
+        visualSomMatrix = new Vector3[ samplingVectorDimension , samplingVectorDimension ];
+        neuronPointsMatrix = new GameObject[ samplingVectorDimension , samplingVectorDimension ];
+        horizontalNeuronLinksMatrix = new GameObject[ samplingVectorDimension , samplingVectorDimension ];
+        verticalNeuronLinksMatrix = new GameObject[ samplingVectorDimension , samplingVectorDimension ];
 
-        for ( int i = 0; i < inputVectorDimension; i++ )
+        for ( int i = 0; i < samplingVectorDimension; i++ )
         {
-            for ( int j = 0; j < inputVectorDimension; j++ )
+            for ( int j = 0; j < samplingVectorDimension; j++ )
             {
                 neuronPointsMatrix[ i , j ] = Instantiate( neuronPoint , new Vector3( 0 , 0 , 0 ) , Quaternion.identity );
                 horizontalNeuronLinksMatrix[ i , j ] = Instantiate( neuronLink , new Vector3( 0 , 0 , 0 ) , Quaternion.identity );
                 verticalNeuronLinksMatrix[ i , j ] = Instantiate( neuronLink , new Vector3( 0 , 0 , 0 ) , Quaternion.identity );
+            }
+        }
+    }
+
+    public void BuildRealSom3DNet()
+    {
+        //linkLength = tileDimension / tileSubdivision;                                               // Roughly
+        linkLength = 10;
+        neuronPointScale = 20;
+
+        for ( int i = 0; i < matrixSideLength; i++ )
+        {
+            for ( int j = 0; j < matrixSideLength; j++ )
+            {
+                // NEURONS
+                neuronPointsMatrix[ i , j ].transform.position = soMap._matrix[ i , j ].worldPosition;
+                neuronPointsMatrix[ i , j ].transform.localScale = new Vector3( neuronPointScale , neuronPointScale , neuronPointScale );
+
+                // LINKS
+                Vector3 horizontalLinkNewPosition;                                                  // The position ehre the horizontal link should be (between two neuron points)                       
+                Vector3 verticalLinkNewPosition;                                                    // Same but vertical link
+                Vector3 horizontalLinkDirection = new Vector3();                                    // The direction of the vector from a neuron point to his right neighbour
+                Vector3 verticalLinkDirection = new Vector3();                                      // The direction of the vector from a neuron point to his front neighbour
+
+                horizontalLinkNewPosition = soMap._matrix[ i , j ].worldPosition;
+                verticalLinkNewPosition = soMap._matrix[ i , j ].worldPosition;
+
+                if ( i + 1 < matrixSideLength && j + 1 < matrixSideLength )
+                {
+                    horizontalLinkNewPosition = (soMap._matrix[ i , j ].worldPosition + soMap._matrix[ i + 1 , j ].worldPosition) / 2;
+                    verticalLinkNewPosition = (soMap._matrix[ i , j ].worldPosition + soMap._matrix[ i , j + 1 ].worldPosition) / 2;
+
+                    horizontalLinkDirection = soMap._matrix[ i + 1 , j ].worldPosition - soMap._matrix[ i , j ].worldPosition;
+                    verticalLinkDirection = soMap._matrix[ i , j + 1 ].worldPosition - soMap._matrix[ i , j ].worldPosition;
+                }
+
+                // Changing their position
+                horizontalNeuronLinksMatrix[ i , j ].transform.position = horizontalLinkNewPosition;
+                verticalNeuronLinksMatrix[ i , j ].transform.position = verticalLinkNewPosition;
+
+                // Changing their rotation
+                horizontalNeuronLinksMatrix[ i , j ].transform.rotation = Quaternion.LookRotation( horizontalLinkDirection , horizontalNeuronLinksMatrix[ i , j ].transform.forward );
+                verticalNeuronLinksMatrix[ i , j ].transform.rotation = Quaternion.LookRotation( verticalLinkDirection , horizontalNeuronLinksMatrix[ i , j ].transform.forward );
+
+                // Changinge their scale
+                // TODO: make this values parametric in order to fit with every change the SOM has (only the length must change)
+                horizontalNeuronLinksMatrix[ i , j ].transform.localScale = new Vector3( 5 , 5 , 50 );
+                verticalNeuronLinksMatrix[ i , j ].transform.localScale = new Vector3( 5 , 5 , 50 );
+
+                // Raising everything at the end
+                Vector3 raisedPosition = neuronPointsMatrix[ i , j ].transform.position;
+                raisedPosition.y += som3DNetHeight;
+                neuronPointsMatrix[ i , j ].transform.position = raisedPosition;
+
+                raisedPosition = horizontalNeuronLinksMatrix[ i , j ].transform.position;
+                raisedPosition.y += som3DNetHeight;
+                horizontalNeuronLinksMatrix[ i , j ].transform.position = raisedPosition;
+
+                raisedPosition = verticalNeuronLinksMatrix[ i , j ].transform.position;
+                raisedPosition.y += som3DNetHeight;
+                verticalNeuronLinksMatrix[ i , j ].transform.position = raisedPosition;
             }
         }
     }
@@ -153,9 +255,9 @@ public class TerrainSampler : MonoBehaviour
         linkLength = 10;
         neuronPointScale = 20;
 
-        for ( int i = 0; i < inputVectorDimension; i++ )
+        for ( int i = 0; i < samplingVectorDimension; i++ )
         {
-            for ( int j = 0; j < inputVectorDimension; j++ )
+            for ( int j = 0; j < samplingVectorDimension; j++ )
             {
                 // NEURONS
                 neuronPointsMatrix[ i , j ].transform.position = visualSomMatrix[ i , j ];
@@ -170,7 +272,7 @@ public class TerrainSampler : MonoBehaviour
                 horizontalLinkNewPosition = visualSomMatrix[ i , j ];                               // To get the y
                 verticalLinkNewPosition = visualSomMatrix[ i , j ];
 
-                if ( i + 1 < inputVectorDimension && j + 1 < inputVectorDimension )
+                if ( i + 1 < samplingVectorDimension && j + 1 < samplingVectorDimension )
                 {
                     horizontalLinkNewPosition = (visualSomMatrix[ i , j ] + visualSomMatrix[ i + 1 , j ]) / 2;
                     verticalLinkNewPosition = (visualSomMatrix[ i , j ] + visualSomMatrix[ i , j + 1 ]) / 2;

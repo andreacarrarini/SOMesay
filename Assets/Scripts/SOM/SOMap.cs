@@ -23,26 +23,28 @@ namespace SOM
 {
     public class SOMap
     {
-        internal INeuron[,] _matrix;
+        public INeuron[,] _matrix;
         internal int _height;
         internal int _width;
         internal double _matrixRadius;
         internal double _numberOfIterations;
         internal double _timeConstant;
         internal double _learningRate;
+        public TerrainSampler terrainSampler;
 
-        public SOMap( int width, int height, int inputDimension, int numberOfIterations, double learningRate )
+        public SOMap( int width , int height , int inputDimension , int numberOfIterations , double learningRate , TerrainSampler ts )
         {
             _width = width;
             _height = height;
-            _matrix = new INeuron[ _width, _height ];
+            _matrix = new INeuron[ _width , _height ];
             _numberOfIterations = numberOfIterations;
             _learningRate = learningRate;
 
-            _matrixRadius = Math.Max( _width, _height ) / 2;
+            _matrixRadius = Math.Max( _width , _height ) / 2;
             _timeConstant = _numberOfIterations / Math.Log( _matrixRadius );
 
             InitializeConnections( inputDimension );
+            terrainSampler = ts;
         }
 
         /*
@@ -70,20 +72,23 @@ namespace SOM
                     var currentInput = input[ i ];
                     var bmu = CalculateBMU( currentInput );
 
-                    (int xStart, int xEnd, int yStart, int yEnd) = GetRadiusIndexes( bmu, currentRadius );
+                    (int xStart, int xEnd, int yStart, int yEnd) = GetRadiusIndexes( bmu , currentRadius );
 
                     for ( int x = xStart; x < xEnd; x++ )
                     {
                         for ( int y = yStart; y < yEnd; y++ )
                         {
-                            var processingNeuron = GetNeuron( x, y );
+                            var processingNeuron = GetNeuron( x , y );
                             var distance = bmu.Distance( processingNeuron );
-                            if ( distance <= Math.Pow( currentRadius, 2.0 ) )
+                            if ( distance <= Math.Pow( currentRadius , 2.0 ) )
                             {
-                                var distanceDrop = GetDistanceDrop( distance, currentRadius );
+                                var distanceDrop = GetDistanceDrop( distance , currentRadius );
+
+                                // DEBUG
+                                terrainSampler.PrintSomWeights();
 
                                 // I inverted th order of learningRate and distanceDrop, because in the definition of UpdateWeights it is that way
-                                processingNeuron.UpdateWeights( currentInput, distanceDrop, learningRate );
+                                processingNeuron.UpdateWeights( currentInput , distanceDrop , learningRate );
                             }
                         }
                     }
@@ -93,7 +98,7 @@ namespace SOM
             }
         }
 
-        internal (int xStart, int xEnd, int yStart, int yEnd) GetRadiusIndexes( INeuron bmu, double currentRadius )
+        internal (int xStart, int xEnd, int yStart, int yEnd) GetRadiusIndexes( INeuron bmu , double currentRadius )
         {
             var xStart = ( int ) (bmu.X - currentRadius - 1);
             xStart = (xStart < 0) ? 0 : xStart;
@@ -110,12 +115,12 @@ namespace SOM
             return (xStart, xEnd, yStart, yEnd);
         }
 
-        internal INeuron GetNeuron( int indexX, int indexY )
+        internal INeuron GetNeuron( int indexX , int indexY )
         {
             if ( indexX > _width || indexY > _height )
                 throw new ArgumentException( "Wrong index!" );
 
-            return _matrix[ indexX, indexY ];
+            return _matrix[ indexX , indexY ];
         }
 
         /*
@@ -127,24 +132,24 @@ namespace SOM
             return _matrixRadius * Math.Exp( -iteration / _timeConstant );
         }
 
-        internal double GetDistanceDrop( double distance, double radius )
+        internal double GetDistanceDrop( double distance , double radius )
         {
-            return Math.Exp( -(Math.Pow( distance, 2.0 ) / Math.Pow( radius, 2.0 )) );
+            return Math.Exp( -(Math.Pow( distance , 2.0 ) / Math.Pow( radius , 2.0 )) );
         }
 
         internal INeuron CalculateBMU( IVector input )
         {
-            INeuron bmu = _matrix[ 0, 0 ];
+            INeuron bmu = _matrix[ 0 , 0 ];
             double bestDist = input.EuclidianDistance( bmu.Weights );
 
             for ( int i = 0; i < _width; i++ )
             {
                 for ( int j = 0; j < _height; j++ )
                 {
-                    var distance = input.EuclidianDistance( _matrix[ i, j ].Weights );
+                    var distance = input.EuclidianDistance( _matrix[ i , j ].Weights );
                     if ( distance < bestDist )
                     {
-                        bmu = _matrix[ i, j ];
+                        bmu = _matrix[ i , j ];
                         bestDist = distance;
                     }
                 }
@@ -159,7 +164,20 @@ namespace SOM
             {
                 for ( int j = 0; j < _height; j++ )
                 {
-                    _matrix[ i, j ] = new Neuron( inputDimension ) { X = i, Y = j };
+                    _matrix[ i , j ] = new Neuron( inputDimension ) { X = i , Y = j };
+                }
+            }
+        }
+
+        public void SetNeuronsWorldPositions( int matrixSideLength , int somDimensionInTiles , float tileDimension , float xOffset , float zOffset , float som3DNetHeight )
+        {
+            for ( int i = 0; i < matrixSideLength; i++ )
+            {
+                for ( int j = 0; j < matrixSideLength; j++ )
+                {
+                    Vector3 neuronWorldPosition = new Vector3( xOffset + i * (somDimensionInTiles * tileDimension / matrixSideLength) ,
+                        som3DNetHeight , zOffset + j * (somDimensionInTiles * tileDimension / matrixSideLength) );
+                    _matrix[ i , j ].worldPosition = neuronWorldPosition;
                 }
             }
         }

@@ -14,6 +14,7 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
 
 using System;
 using SOM.VectorNamespace;
+using UnityEngine;
 using System.Runtime.CompilerServices;
 
 namespace SOM.NeuronNamespace
@@ -21,6 +22,7 @@ namespace SOM.NeuronNamespace
 
     public class Neuron : INeuron
     {
+        public Vector3 worldPosition { get; set; }
         public int X { get; set; }
         public int Y { get; set; }
         public IVector Weights { get; }
