@@ -67,6 +67,9 @@ namespace SOM
             {
                 var currentRadius = CalculateNeighborhoodRadius( iteration );
 
+                // DEBUG
+                //terrainSampler.PrintSomWeights();
+
                 for ( int i = 0; i < input.Length; i++ )
                 {
                     var currentInput = input[ i ];
@@ -78,17 +81,17 @@ namespace SOM
                     {
                         for ( int y = yStart; y < yEnd; y++ )
                         {
-                            var processingNeuron = GetNeuron( x , y );
+                            Neuron processingNeuron = GetNeuron( x , y ) as Neuron;
                             var distance = bmu.Distance( processingNeuron );
+
                             if ( distance <= Math.Pow( currentRadius , 2.0 ) )
                             {
                                 var distanceDrop = GetDistanceDrop( distance , currentRadius );
 
-                                // DEBUG
-                                terrainSampler.PrintSomWeights();
-
                                 // I inverted th order of learningRate and distanceDrop, because in the definition of UpdateWeights it is that way
                                 processingNeuron.UpdateWeights( currentInput , distanceDrop , learningRate );
+
+                                processingNeuron.UpdateNeuronsWorldPositions( currentInput , distanceDrop , learningRate );
                             }
                         }
                     }
@@ -147,6 +150,7 @@ namespace SOM
                 for ( int j = 0; j < _height; j++ )
                 {
                     var distance = input.EuclidianDistance( _matrix[ i , j ].Weights );
+
                     if ( distance < bestDist )
                     {
                         bmu = _matrix[ i , j ];
@@ -169,7 +173,7 @@ namespace SOM
             }
         }
 
-        public void SetNeuronsWorldPositions( int matrixSideLength , int somDimensionInTiles , float tileDimension , float xOffset , float zOffset , float som3DNetHeight )
+        public void SetNeuronsInitialWorldPositions( int matrixSideLength , int somDimensionInTiles , float tileDimension , float xOffset , float zOffset , float som3DNetHeight )
         {
             for ( int i = 0; i < matrixSideLength; i++ )
             {

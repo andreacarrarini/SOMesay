@@ -40,10 +40,10 @@ namespace SOM.NeuronNamespace
 
         public double Distance( INeuron neuron )
         {
-            return Math.Pow( (X - neuron.X), 2 ) + Math.Pow( (Y - neuron.Y), 2 );
+            return Math.Pow( (X - neuron.X) , 2 ) + Math.Pow( (Y - neuron.Y) , 2 );
         }
 
-        public void SetWeight( int index, double value )
+        public void SetWeight( int index , double value )
         {
             if ( index >= Weights.Count )
                 throw new ArgumentException( "Wrong index!" );
@@ -59,7 +59,7 @@ namespace SOM.NeuronNamespace
             return Weights[ index ];
         }
 
-        public void UpdateWeights( IVector input, double distanceDecay, double learningRate )
+        public void UpdateWeights( IVector input , double distanceDecay , double learningRate )
         {
             if ( input.Count != Weights.Count )
                 throw new ArgumentException( "Wrong input!" );
@@ -68,6 +68,25 @@ namespace SOM.NeuronNamespace
             {
                 Weights[ i ] += distanceDecay * learningRate * (input[ i ] - Weights[ i ]);
             }
+        }
+
+        public void UpdateNeuronsWorldPositions( IVector input , double distanceDecay , double learningRate )
+        {
+            double K = 1;
+
+            if ( input.Count != Weights.Count )
+                throw new ArgumentException( "Wrong input!" );
+
+            //double newX = worldPosition.x + distanceDecay * learningRate * (input[ 0 ] - Weights[ 0 ]);
+            double newY = worldPosition.y + distanceDecay * learningRate * (input[ 1 ] - Weights[ 1 ]) * K;
+            //double newZ = worldPosition.z + distanceDecay * learningRate * (input[ 2 ] - Weights[ 2 ]);
+
+            double newX = worldPosition.x;
+            double newZ = worldPosition.z;
+
+            Vector3 newWorldPosition = new Vector3( ( float ) newX , ( float ) newY , ( float ) newZ );
+
+            worldPosition = newWorldPosition;
         }
     }
 }
