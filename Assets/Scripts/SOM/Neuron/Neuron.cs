@@ -27,6 +27,8 @@ namespace SOM.NeuronNamespace
         public int Y { get; set; }
         public IVector Weights { get; }
 
+        private double mapSize = 5000;                                                                  // Remember to change if # of tiles or dimensions change
+
         public Neuron( int numOfWeights )
         {
             var random = new System.Random();
@@ -35,6 +37,10 @@ namespace SOM.NeuronNamespace
             for ( int i = 0; i < numOfWeights; i++ )
             {
                 Weights.Add( random.NextDouble() );
+
+                double pippo = Weights[ i ];
+
+                //Weights.Add( 1 );
             }
         }
 
@@ -66,23 +72,57 @@ namespace SOM.NeuronNamespace
 
             for ( int i = 0; i < Weights.Count; i++ )
             {
-                Weights[ i ] += distanceDecay * learningRate * (input[ i ] - Weights[ i ]);
+                //Weights[ i ] += distanceDecay * learningRate * (input[ i ] - Weights[ i ]);
+
+                Weights[ i ] += distanceDecay * learningRate * (input[ i ] / mapSize - Weights[ i ] * input[ i ] / mapSize);
+                Weights[ i ] = ( double ) Mathf.Clamp01( ( float ) Weights[ i ] );
             }
         }
 
         public void UpdateNeuronsWorldPositions( IVector input , double distanceDecay , double learningRate )
         {
-            double K = 1;
-
             if ( input.Count != Weights.Count )
                 throw new ArgumentException( "Wrong input!" );
 
-            //double newX = worldPosition.x + distanceDecay * learningRate * (input[ 0 ] - Weights[ 0 ]);
-            double newY = worldPosition.y + distanceDecay * learningRate * (input[ 1 ] - Weights[ 1 ]) * K;
-            //double newZ = worldPosition.z + distanceDecay * learningRate * (input[ 2 ] - Weights[ 2 ]);
+            // First clamp in the previous range and then clamp in the area of the map
+            //double newX = ( double ) Mathf.Clamp( ( float ) (worldPosition.x + distanceDecay * learningRate * (input[ 0 ] - Weights[ 0 ] * input[ 0 ])) ,
+            //    worldPosition.x - 1000 , worldPosition.x + 1000 );
+            //newX = ( double ) Mathf.Clamp( ( float ) newX , -3000 , -3000 + 5000 );
+
+            //double newY = worldPosition.y + distanceDecay * learningRate * (input[ 1 ] - Weights[ 1 ] * input[ 1 ]);
+
+            //double newZ = ( double ) Mathf.Clamp( ( float ) (worldPosition.z + distanceDecay * learningRate * (input[ 2 ] - Weights[ 2 ] * input[ 2 ])) ,
+            //    worldPosition.z - 1000 , worldPosition.z + 1000 );
+            //newZ = ( double ) Mathf.Clamp( ( float ) newZ , -4000 , -4000 + 5000 );
+
+            //double newX = ( double ) Mathf.Clamp( ( float ) (worldPosition.x + distanceDecay * learningRate * (worldPosition.x - Weights[ 0 ] * input[ 0 ])) ,
+            //    worldPosition.x - 1000 , worldPosition.x + 1000 );
+            //newX = ( double ) Mathf.Clamp( ( float ) newX , -3000 , -3000 + 5000 );
+
+            //double newY = worldPosition.y + distanceDecay * learningRate * (worldPosition.y - Weights[ 1 ] * input[ 1 ]);
+
+            //double newZ = ( double ) Mathf.Clamp( ( float ) (worldPosition.z + distanceDecay * learningRate * (worldPosition.z - Weights[ 2 ] * input[ 2 ])) ,
+            //    worldPosition.z - 1000 , worldPosition.z + 1000 );
+            //newZ = ( double ) Mathf.Clamp( ( float ) newZ , -4000 , -4000 + 5000 );
+
+            //double newX = ( double ) Mathf.Clamp( ( float ) (worldPosition.x + distanceDecay * learningRate * (Weights[ 0 ] * input[ 0 ] - worldPosition.x * Weights[ 0 ])) ,
+            //    worldPosition.x - 1000 , worldPosition.x + 1000 );
+            //newX = ( double ) Mathf.Clamp( ( float ) newX , -3000 , -3000 + 5000 );
 
             double newX = worldPosition.x;
+
+            //double newY = worldPosition.y + distanceDecay * learningRate * (Weights[ 1 ] * input[ 1 ] - worldPosition.y * Weights[ 1 ]);
+
+            double newY = worldPosition.y + distanceDecay * learningRate * (input[ 1 ] - worldPosition.y);
+
+            //double newZ = ( double ) Mathf.Clamp( ( float ) (worldPosition.z + distanceDecay * learningRate * (Weights[ 2 ] * input[ 2 ] - worldPosition.z * Weights[ 2 ])) ,
+            //    worldPosition.z - 1000 , worldPosition.z + 1000 );
+            //newZ = ( double ) Mathf.Clamp( ( float ) newZ , -4000 , -4000 + 5000 );
+
             double newZ = worldPosition.z;
+
+            //double newX = worldPosition.x;
+            //double newZ = worldPosition.z;
 
             Vector3 newWorldPosition = new Vector3( ( float ) newX , ( float ) newY , ( float ) newZ );
 

@@ -25,9 +25,9 @@ public class TerrainSampler : MonoBehaviour
     private int tileDimension = 1000;                                                               // The tile dimension in world's unit
     private int tileSubdivision = 10;                                                               // How many input vectors a tile contains
     private int samplingVectorDimension = 50;                                                       // The dimension and the number of each sampling vector
-    private int numberOfIterations = 20;
+    private int numberOfIterations = 10;
     private double leariningRate = 0.5;
-    private int matrixSideLength = 10;                                                              // The length of the side (square) of the SOM (how many neurons in heigth and length)
+    private int matrixSideLength = 20;                                                              // The length of the side (square) of the SOM (how many neurons in heigth and length)
     private Vector[] inputMatrix;                                                                   // The SOM input matrix (list of vectors)
     private Vector3 pointToSample;                                                                  // The position used to sample the height of each point required
     private Vector3 samplingStartingPoint;
@@ -38,7 +38,9 @@ public class TerrainSampler : MonoBehaviour
     private float linkLength;                                                                       // The length of the link between 2 neurons
     private float neuronPointScale;                                                                 // The scale of the sphere in Unity
     private float som3DNetHeight = 400;                                                             // The height offset of the 3D net
-    private SOMap soMap;                                                                            // The actual SOM
+    public SOMap soMap;                                                                            // The actual SOM
+    private IEnumerator coroutine;
+    public int number = 0;                                                                          // Just for debug
 
     void Start()
     {
@@ -53,7 +55,7 @@ public class TerrainSampler : MonoBehaviour
 
         SomTrainLauncher();
 
-        BuildRealSom3DNet();
+        //BuildRealSom3DNet();
         //BuildSom3DNet();
     }
 
@@ -132,7 +134,9 @@ public class TerrainSampler : MonoBehaviour
     {
         soMap = new SOMap( matrixSideLength , matrixSideLength , 3 , numberOfIterations , leariningRate , this );
         soMap.SetNeuronsInitialWorldPositions( matrixSideLength , somDimensionInTiles , tileDimension , samplingStartingPoint.x , samplingStartingPoint.z , som3DNetHeight );
-        soMap.Train( inputMatrix );
+        coroutine = soMap.TrainCoroutine( inputMatrix );
+        StartCoroutine( coroutine );
+        //soMap.Train( inputMatrix );
     }
 
     public void PrintSomWeights()                                                                   // DEBUG
@@ -233,15 +237,15 @@ public class TerrainSampler : MonoBehaviour
 
                 // Raising everything at the end
                 Vector3 raisedPosition = neuronPointsMatrix[ i , j ].transform.position;
-                raisedPosition.y += som3DNetHeight;
+                //raisedPosition.y += som3DNetHeight;
                 neuronPointsMatrix[ i , j ].transform.position = raisedPosition;
 
                 raisedPosition = horizontalNeuronLinksMatrix[ i , j ].transform.position;
-                raisedPosition.y += som3DNetHeight;
+                //raisedPosition.y += som3DNetHeight;
                 horizontalNeuronLinksMatrix[ i , j ].transform.position = raisedPosition;
 
                 raisedPosition = verticalNeuronLinksMatrix[ i , j ].transform.position;
-                raisedPosition.y += som3DNetHeight;
+                //raisedPosition.y += som3DNetHeight;
                 verticalNeuronLinksMatrix[ i , j ].transform.position = raisedPosition;
             }
         }

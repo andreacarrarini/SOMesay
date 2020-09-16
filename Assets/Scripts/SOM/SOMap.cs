@@ -31,6 +31,7 @@ namespace SOM
         internal double _timeConstant;
         internal double _learningRate;
         public TerrainSampler terrainSampler;
+        //private IEnumerator coroutine;
 
         public SOMap( int width , int height , int inputDimension , int numberOfIterations , double learningRate , TerrainSampler ts )
         {
@@ -101,6 +102,54 @@ namespace SOM
             }
         }
 
+        public IEnumerator TrainCoroutine( Vector[] input )
+        {
+            int iteration = 0;
+            var learningRate = _learningRate;
+
+            while ( iteration < _numberOfIterations )
+            {
+                var currentRadius = CalculateNeighborhoodRadius( iteration );
+
+                // DEBUG
+                //terrainSampler.PrintSomWeights();
+
+                yield return null;
+
+                for ( int i = 0; i < input.Length; i++ )
+                {
+                    var currentInput = input[ i ];
+                    var bmu = CalculateBMU( currentInput );
+
+                    (int xStart, int xEnd, int yStart, int yEnd) = GetRadiusIndexes( bmu , currentRadius );
+
+                    for ( int x = xStart; x < xEnd; x++ )
+                    {
+                        for ( int y = yStart; y < yEnd; y++ )
+                        {
+                            Neuron processingNeuron = GetNeuron( x , y ) as Neuron;
+                            var distance = bmu.Distance( processingNeuron );
+
+                            if ( distance <= Math.Pow( currentRadius , 2.0 ) )
+                            {
+                                var distanceDrop = GetDistanceDrop( distance , currentRadius );
+
+                                // I inverted th order of learningRate and distanceDrop, because in the definition of UpdateWeights it is that way
+                                processingNeuron.UpdateWeights( currentInput , distanceDrop , learningRate );
+
+                                processingNeuron.UpdateNeuronsWorldPositions( currentInput , distanceDrop , learningRate );
+                            }
+                        }
+                    }
+                    terrainSampler.number++;
+                }
+                iteration++;
+            }
+            MonoBehaviour.print( terrainSampler.number );
+
+            terrainSampler.BuildRealSom3DNet();
+        }
+
         internal (int xStart, int xEnd, int yStart, int yEnd) GetRadiusIndexes( INeuron bmu , double currentRadius )
         {
             var xStart = ( int ) (bmu.X - currentRadius - 1);
@@ -143,13 +192,29 @@ namespace SOM
         internal INeuron CalculateBMU( IVector input )
         {
             INeuron bmu = _matrix[ 0 , 0 ];
-            double bestDist = input.EuclidianDistance( bmu.Weights );
+            double bestDist = Double.PositiveInfinity;
 
             for ( int i = 0; i < _width; i++ )
             {
                 for ( int j = 0; j < _height; j++ )
                 {
-                    var distance = input.EuclidianDistance( _matrix[ i , j ].Weights );
+                    /*
+                     * Attempt to make the distance a real distance from points in space and not from random weights
+                     */
+                    Vector vectorToComputeDistanceWithWorldPosition = new Vector();
+
+                    for ( int g = 0; g < 3; g++ )
+                    {
+                        vectorToComputeDistanceWithWorldPosition.Add( _matrix[ i , j ].Weights[g] );
+                    }
+
+                    vectorToComputeDistanceWithWorldPosition[ 0 ] *= _matrix[ i , j ].worldPosition.x;
+                    vectorToComputeDistanceWithWorldPosition[ 1 ] *= _matrix[ i , j ].worldPosition.y;
+                    vectorToComputeDistanceWithWorldPosition[ 2 ] *= _matrix[ i , j ].worldPosition.z;
+
+
+
+                    var distance = input.EuclidianDistance( vectorToComputeDistanceWithWorldPosition );
 
                     if ( distance < bestDist )
                     {
@@ -179,8 +244,12 @@ namespace SOM
             {
                 for ( int j = 0; j < matrixSideLength; j++ )
                 {
+                    //Vector3 neuronWorldPosition = new Vector3( xOffset + i * (somDimensionInTiles * tileDimension / matrixSideLength) ,
+                    //    som3DNetHeight , zOffset + j * (somDimensionInTiles * tileDimension / matrixSideLength) );
+                    //_matrix[ i , j ].worldPosition = neuronWorldPosition;
+
                     Vector3 neuronWorldPosition = new Vector3( xOffset + i * (somDimensionInTiles * tileDimension / matrixSideLength) ,
-                        som3DNetHeight , zOffset + j * (somDimensionInTiles * tileDimension / matrixSideLength) );
+                        0f , zOffset + j * (somDimensionInTiles * tileDimension / matrixSideLength) );
                     _matrix[ i , j ].worldPosition = neuronWorldPosition;
                 }
             }
