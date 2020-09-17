@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using SOM;
 using SOM.VectorNamespace;
+using System;
 
 public class TerrainSampler : MonoBehaviour
 {
@@ -26,9 +27,9 @@ public class TerrainSampler : MonoBehaviour
     private int tileSubdivision = 10;                                                               // How many input vectors a tile contains
     private int samplingVectorDimension = 50;                                                       // The dimension and the number of each sampling vector
     private int numberOfIterations = 10;
-    private double leariningRate = 0.5;
+    private double leariningRate = 0.9;
     private int matrixSideLength = 20;                                                              // The length of the side (square) of the SOM (how many neurons in heigth and length)
-    private Vector[] inputMatrix;                                                                   // The SOM input matrix (list of vectors)
+    public Vector[] inputMatrix;                                                                   // The SOM input matrix (list of vectors)
     private Vector3 pointToSample;                                                                  // The position used to sample the height of each point required
     private Vector3 samplingStartingPoint;
     private Vector3[,] visualSomMatrix;                                                             // The matrix of points sampled (used to spawn visual objects)
@@ -76,12 +77,49 @@ public class TerrainSampler : MonoBehaviour
         }
     }
 
+    public Terrain[] SortActiveTerrains( Terrain[] terrains , float xOffset , float zOffset )
+    {
+        for ( int i = 0; i < terrains.Length; i++ )
+        {
+            Terrain currentTerrain = terrains[ i ];
+
+            int position = 0;
+
+            //for ( int j = 0; j < terrains.Length; j++ )
+            //{
+            //    Terrain comparisonTerrain = terrains[ j ];
+
+            //    if ( currentTerrain.transform.position.x > comparisonTerrain.transform.position.x )
+            //        position++;
+
+            //    if ( currentTerrain.transform.position.z > comparisonTerrain.transform.position.z )
+            //        position++;
+            //}
+
+            foreach ( Terrain terrain in terrains )
+            {
+                position = ( int ) (Math.Floor( (terrain.transform.position.z + Math.Abs( zOffset )) / tileDimension ) * somDimensionInTiles +
+                    Math.Floor( (terrain.transform.position.x + Math.Abs( xOffset )) / tileDimension ));
+
+                int swapPosition = ( int ) (Math.Floor( (terrains[ position ].transform.position.z + Math.Abs( zOffset )) / tileDimension ) * somDimensionInTiles +
+                    Math.Floor( (terrains[ position ].transform.position.x + Math.Abs( xOffset )) / tileDimension ));
+
+                // Swap
+                Terrain swapTerrain = terrains[ position ];
+                terrains[ position ] = terrain;
+                terrains[ swapPosition ] = swapTerrain;
+            }
+        }
+        return terrains;
+    }
+
     public void Sampling()
     {
         pointToSample = new Vector3();
         float xOffset = samplingStartingPoint.x;                                                    // To make it independent from the tile positioning
         float zOffset = samplingStartingPoint.z;
         Terrain[] terrains = Terrain.activeTerrains;                                                // Array of all active terrains
+        terrains = SortActiveTerrains( terrains , xOffset , zOffset );
 
         for ( int i = 0; i < somDimensionInTiles; i++ )
         {
@@ -97,19 +135,27 @@ public class TerrainSampler : MonoBehaviour
                         pointToSample.Set( xOffset + i * tileDimension + iTile * (tileDimension / tileSubdivision) , 0f ,
                             zOffset + j * tileDimension + jTile * (tileDimension / tileSubdivision) );
 
-                        while ( terrains[ terrainIndex ].transform.position.x > pointToSample.x || pointToSample.x - terrains[ terrainIndex ].transform.position.x >= tileDimension
-                            || terrains[ terrainIndex ].transform.position.z > pointToSample.z || pointToSample.z - terrains[ terrainIndex ].transform.position.z >= tileDimension )
-                        {
-                            terrainIndex++;                                                         // Looking for the correct terrain to sample
-                        }
+                        //while ( terrains[ terrainIndex ].transform.position.x > pointToSample.x || pointToSample.x - terrains[ terrainIndex ].transform.position.x >= tileDimension
+                        //    || terrains[ terrainIndex ].transform.position.z > pointToSample.z || pointToSample.z - terrains[ terrainIndex ].transform.position.z >= tileDimension )
+                        //{
+                        //    print( terrains[ terrainIndex ].transform.position );                   // Debug
+                        //    terrainIndex++;                                                         // Looking for the correct terrain to sample
+                        //}
+
+                        terrainIndex = ( int ) (Math.Floor( (pointToSample.z + Math.Abs( zOffset )) / tileDimension ) * somDimensionInTiles +
+                            Math.Floor( (pointToSample.x + Math.Abs( xOffset )) / tileDimension ));
 
                         pointToSample.y = terrains[ terrainIndex ].SampleHeight( pointToSample );
 
                         //visualSomMatrix[ i * tileSubdivision + iTile , j * tileSubdivision + jTile ] = pointToSample;
 
-                        inputMatrix[ i * tileSubdivision + iTile + j * tileSubdivision + jTile ][ 0 ] = pointToSample.x;
-                        inputMatrix[ i * tileSubdivision + iTile + j * tileSubdivision + jTile ][ 1 ] = pointToSample.y;
-                        inputMatrix[ i * tileSubdivision + iTile + j * tileSubdivision + jTile ][ 2 ] = pointToSample.z;
+                        // The index in the Input Matrix in which the sample will be memorized
+                        int positionInInputMatrix = ( int ) (Math.Floor( (pointToSample.z + Math.Abs( zOffset )) / (tileDimension / tileSubdivision) ) * samplingVectorDimension
+                            + Math.Floor( (pointToSample.x + Math.Abs( xOffset )) / (tileDimension / tileSubdivision) ));
+
+                        inputMatrix[ positionInInputMatrix ][ 0 ] = pointToSample.x;
+                        inputMatrix[ positionInInputMatrix ][ 1 ] = pointToSample.y;
+                        inputMatrix[ positionInInputMatrix ][ 2 ] = pointToSample.z;
                     }
                 }
             }
@@ -237,15 +283,15 @@ public class TerrainSampler : MonoBehaviour
 
                 // Raising everything at the end
                 Vector3 raisedPosition = neuronPointsMatrix[ i , j ].transform.position;
-                //raisedPosition.y += som3DNetHeight;
+                raisedPosition.y += som3DNetHeight;
                 neuronPointsMatrix[ i , j ].transform.position = raisedPosition;
 
                 raisedPosition = horizontalNeuronLinksMatrix[ i , j ].transform.position;
-                //raisedPosition.y += som3DNetHeight;
+                raisedPosition.y += som3DNetHeight;
                 horizontalNeuronLinksMatrix[ i , j ].transform.position = raisedPosition;
 
                 raisedPosition = verticalNeuronLinksMatrix[ i , j ].transform.position;
-                //raisedPosition.y += som3DNetHeight;
+                raisedPosition.y += som3DNetHeight;
                 verticalNeuronLinksMatrix[ i , j ].transform.position = raisedPosition;
             }
         }
@@ -261,7 +307,7 @@ public class TerrainSampler : MonoBehaviour
                 neuronPointsMatrix[ i , j ].transform.position = soMap._matrix[ i , j ].worldPosition;
 
                 // LINKS
-                Vector3 horizontalLinkNewPosition;                    
+                Vector3 horizontalLinkNewPosition;
                 Vector3 verticalLinkNewPosition;
                 Vector3 horizontalLinkDirection = new Vector3();
                 Vector3 verticalLinkDirection = new Vector3();

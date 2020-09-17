@@ -36,7 +36,9 @@ namespace SOM.NeuronNamespace
 
             for ( int i = 0; i < numOfWeights; i++ )
             {
-                Weights.Add( random.NextDouble() );
+                //Weights.Add( random.NextDouble() );
+
+                Weights.Add( 0.5 );
 
                 double pippo = Weights[ i ];
 
