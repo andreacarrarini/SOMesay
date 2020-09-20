@@ -29,6 +29,12 @@ namespace SOM.NeuronNamespace
 
         private double mapSize = 5000;                                                                  // Remember to change if # of tiles or dimensions change
 
+        /*
+         * It's the sin(alfa) where alfa is the angle between the side (inputPoint (sample) and Neuron.worldPosition (with y = 0)) and 
+         * the side (inputPoint (sample) and Neuron.worldPosition (with y = 0))
+         */
+        private float contributeByDistance;
+
         public Neuron( int numOfWeights )
         {
             var random = new System.Random();
@@ -49,6 +55,7 @@ namespace SOM.NeuronNamespace
         public double Distance( INeuron neuron )
         {
             return Math.Pow( (X - neuron.X) , 2 ) + Math.Pow( (Y - neuron.Y) , 2 );
+            //return Math.Pow( zeroHeightDistance , 2 ) + Math.Pow( worldPosition.y - neuron.worldPosition.y , 2 );
         }
 
         public void SetWeight( int index , double value )
@@ -74,10 +81,19 @@ namespace SOM.NeuronNamespace
 
             for ( int i = 0; i < Weights.Count; i++ )
             {
+                Vector3 samplePoint = new Vector3( ( float ) input[ 0 ] , ( float ) input[ 1 ] , ( float ) input[ 2 ] );
+                Vector3 worldPositionZeroHeight = new Vector3( worldPosition.x , 0 , worldPosition.z );
+
+                contributeByDistance = samplePoint.y / (samplePoint - worldPositionZeroHeight).magnitude;
                 //Weights[ i ] += distanceDecay * learningRate * (input[ i ] - Weights[ i ]);
 
-                Weights[ i ] += distanceDecay * learningRate * (input[ i ] / mapSize - Weights[ i ] * input[ i ] / mapSize);
-                Weights[ i ] = ( double ) Mathf.Clamp01( ( float ) Weights[ i ] );
+                //Weights[ i ] += distanceDecay * learningRate * (input[ i ] / mapSize - Weights[ i ] * input[ i ] / mapSize);
+
+                Weights[ i ] += distanceDecay * learningRate * (input[ i ] - worldPosition.y);
+                //Weights[ i ] += distanceDecay * learningRate * contributeByDistance * (input[ i ] - worldPosition.y);
+                //Weights[ i ] += learningRate * contributeByDistance * (input[ i ] - worldPosition.y);
+
+                //Weights[ i ] = ( double ) Mathf.Clamp01( ( float ) Weights[ i ] );
             }
         }
 
@@ -115,7 +131,12 @@ namespace SOM.NeuronNamespace
 
             //double newY = worldPosition.y + distanceDecay * learningRate * (Weights[ 1 ] * input[ 1 ] - worldPosition.y * Weights[ 1 ]);
 
-            double newY = worldPosition.y + distanceDecay * learningRate * (input[ 1 ] - worldPosition.y);
+            // STUPID TEST
+            //double newY = distanceDecay * learningRate * input[ 1 ];
+
+            //double newY = worldPosition.y + distanceDecay * learningRate * (input[ 1 ] - worldPosition.y);
+            //double newY = worldPosition.y + distanceDecay * learningRate * contributeByDistance * (input[ 1 ] - worldPosition.y);
+            double newY = worldPosition.y + learningRate * contributeByDistance * (input[ 1 ] - worldPosition.y);
 
             //double newZ = ( double ) Mathf.Clamp( ( float ) (worldPosition.z + distanceDecay * learningRate * (Weights[ 2 ] * input[ 2 ] - worldPosition.z * Weights[ 2 ])) ,
             //    worldPosition.z - 1000 , worldPosition.z + 1000 );

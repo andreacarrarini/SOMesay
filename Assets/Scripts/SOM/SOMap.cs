@@ -59,48 +59,6 @@ namespace SOM
          * Finally, this value,  along with the value of the learning rate is used to update the weights on each connection of the neuron.
          * At the end of the Train method, the learning rate is updated after each iteration.
         */
-        public void Train( Vector[] input )
-        {
-            int iteration = 0;
-            var learningRate = _learningRate;
-
-            while ( iteration < _numberOfIterations )
-            {
-                var currentRadius = CalculateNeighborhoodRadius( iteration );
-
-                // DEBUG
-                //terrainSampler.PrintSomWeights();
-
-                for ( int i = 0; i < input.Length; i++ )
-                {
-                    var currentInput = input[ i ];
-                    var bmu = CalculateBMU( currentInput );
-
-                    (int xStart, int xEnd, int yStart, int yEnd) = GetRadiusIndexes( bmu , currentRadius );
-
-                    for ( int x = xStart; x < xEnd; x++ )
-                    {
-                        for ( int y = yStart; y < yEnd; y++ )
-                        {
-                            Neuron processingNeuron = GetNeuron( x , y ) as Neuron;
-                            var distance = bmu.Distance( processingNeuron );
-
-                            if ( distance <= Math.Pow( currentRadius , 2.0 ) )
-                            {
-                                var distanceDrop = GetDistanceDrop( distance , currentRadius );
-
-                                // I inverted th order of learningRate and distanceDrop, because in the definition of UpdateWeights it is that way
-                                processingNeuron.UpdateWeights( currentInput , distanceDrop , learningRate );
-
-                                processingNeuron.UpdateNeuronsWorldPositions( currentInput , distanceDrop , learningRate );
-                            }
-                        }
-                    }
-                }
-                iteration++;
-                learningRate = _learningRate * Math.Exp( -( double ) iteration / _numberOfIterations );
-            }
-        }
 
         public IEnumerator TrainCoroutine( Vector[] input )
         {
@@ -205,14 +163,12 @@ namespace SOM
 
                     for ( int g = 0; g < 3; g++ )
                     {
-                        vectorToComputeDistanceWithWorldPosition.Add( _matrix[ i , j ].Weights[g] );
+                        vectorToComputeDistanceWithWorldPosition.Add( 0.5 );
                     }
 
-                    vectorToComputeDistanceWithWorldPosition[ 0 ] *= _matrix[ i , j ].worldPosition.x;
-                    vectorToComputeDistanceWithWorldPosition[ 1 ] *= _matrix[ i , j ].worldPosition.y;
-                    vectorToComputeDistanceWithWorldPosition[ 2 ] *= _matrix[ i , j ].worldPosition.z;
-
-
+                    vectorToComputeDistanceWithWorldPosition[ 0 ] = _matrix[ i , j ].worldPosition.x;
+                    vectorToComputeDistanceWithWorldPosition[ 1 ] = _matrix[ i , j ].worldPosition.y;
+                    vectorToComputeDistanceWithWorldPosition[ 2 ] = _matrix[ i , j ].worldPosition.z;
 
                     var distance = input.EuclidianDistance( vectorToComputeDistanceWithWorldPosition );
 
@@ -238,18 +194,19 @@ namespace SOM
             }
         }
 
-        public void SetNeuronsInitialWorldPositions( int matrixSideLength , int somDimensionInTiles , float tileDimension , float xOffset , float zOffset , float som3DNetHeight )
+        public void SetNeuronsInitialWorldPositions( int matrixSideLength , int somDimensionInTiles , float tileDimension ,
+            float xOffset , float zOffset , float som3DNetHeight , float mapMagicGraphHeight )
         {
-            for ( int i = 0; i < matrixSideLength; i++ )
+            for ( int j = 0; j < matrixSideLength; j++ )
             {
-                for ( int j = 0; j < matrixSideLength; j++ )
+                for ( int i = 0; i < matrixSideLength; i++ )
                 {
                     //Vector3 neuronWorldPosition = new Vector3( xOffset + i * (somDimensionInTiles * tileDimension / matrixSideLength) ,
                     //    som3DNetHeight , zOffset + j * (somDimensionInTiles * tileDimension / matrixSideLength) );
                     //_matrix[ i , j ].worldPosition = neuronWorldPosition;
 
                     Vector3 neuronWorldPosition = new Vector3( xOffset + i * (somDimensionInTiles * tileDimension / matrixSideLength) ,
-                        0f , zOffset + j * (somDimensionInTiles * tileDimension / matrixSideLength) );
+                        mapMagicGraphHeight / 2 , zOffset + j * (somDimensionInTiles * tileDimension / matrixSideLength) );
                     _matrix[ i , j ].worldPosition = neuronWorldPosition;
                 }
             }

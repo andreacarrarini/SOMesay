@@ -42,6 +42,7 @@ public class TerrainSampler : MonoBehaviour
     public SOMap soMap;                                                                            // The actual SOM
     private IEnumerator coroutine;
     public int number = 0;                                                                          // Just for debug
+    float mapMagicGraphHeight = 751f;
 
     void Start()
     {
@@ -121,13 +122,13 @@ public class TerrainSampler : MonoBehaviour
         Terrain[] terrains = Terrain.activeTerrains;                                                // Array of all active terrains
         terrains = SortActiveTerrains( terrains , xOffset , zOffset );
 
-        for ( int i = 0; i < somDimensionInTiles; i++ )
+        for ( int j = 0; j < somDimensionInTiles; j++ )
         {
-            for ( int j = 0; j < somDimensionInTiles; j++ )
+            for ( int i = 0; i < somDimensionInTiles; i++ )
             {
-                for ( int iTile = 0; iTile < tileSubdivision; iTile++ )
+                for ( int jTile = 0; jTile < tileSubdivision; jTile++ )
                 {
-                    for ( int jTile = 0; jTile < tileSubdivision; jTile++ )
+                    for ( int iTile = 0; iTile < tileSubdivision; iTile++ )
                     {
                         int terrainIndex = 0;
 
@@ -144,6 +145,10 @@ public class TerrainSampler : MonoBehaviour
 
                         terrainIndex = ( int ) (Math.Floor( (pointToSample.z + Math.Abs( zOffset )) / tileDimension ) * somDimensionInTiles +
                             Math.Floor( (pointToSample.x + Math.Abs( xOffset )) / tileDimension ));
+
+                        Terrain activeTerrain = terrains[ terrainIndex ];
+                        if ( !activeTerrain.isActiveAndEnabled )
+                            return;
 
                         pointToSample.y = terrains[ terrainIndex ].SampleHeight( pointToSample );
 
@@ -179,7 +184,9 @@ public class TerrainSampler : MonoBehaviour
     public void SomTrainLauncher()                                                                  // Launches the SOM training
     {
         soMap = new SOMap( matrixSideLength , matrixSideLength , 3 , numberOfIterations , leariningRate , this );
-        soMap.SetNeuronsInitialWorldPositions( matrixSideLength , somDimensionInTiles , tileDimension , samplingStartingPoint.x , samplingStartingPoint.z , som3DNetHeight );
+        soMap.SetNeuronsInitialWorldPositions( matrixSideLength , somDimensionInTiles , tileDimension , samplingStartingPoint.x ,
+            samplingStartingPoint.z , som3DNetHeight , mapMagicGraphHeight );
+
         coroutine = soMap.TrainCoroutine( inputMatrix );
         StartCoroutine( coroutine );
         //soMap.Train( inputMatrix );
