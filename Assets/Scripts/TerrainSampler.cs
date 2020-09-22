@@ -27,9 +27,9 @@ public class TerrainSampler : MonoBehaviour
     private int tileSubdivision = 10;                                                               // How many input vectors a tile contains
     private int samplingVectorDimension = 50;                                                       // The dimension and the number of each sampling vector
     private int numberOfIterations = 10;
-    private double leariningRate = 0.9;
+    private double leariningRate = 0.5;
     private int matrixSideLength = 20;                                                              // The length of the side (square) of the SOM (how many neurons in heigth and length)
-    public Vector[] inputMatrix;                                                                   // The SOM input matrix (list of vectors)
+    public Vector[] inputMatrix;                                                                    // The SOM input matrix (list of vectors)
     private Vector3 pointToSample;                                                                  // The position used to sample the height of each point required
     private Vector3 samplingStartingPoint;
     private Vector3[,] visualSomMatrix;                                                             // The matrix of points sampled (used to spawn visual objects)
@@ -39,7 +39,7 @@ public class TerrainSampler : MonoBehaviour
     private float linkLength;                                                                       // The length of the link between 2 neurons
     private float neuronPointScale;                                                                 // The scale of the sphere in Unity
     private float som3DNetHeight = 400;                                                             // The height offset of the 3D net
-    public SOMap soMap;                                                                            // The actual SOM
+    public SOMap soMap;                                                                             // The actual SOM
     private IEnumerator coroutine;
     public int number = 0;                                                                          // Just for debug
     float mapMagicGraphHeight = 751f;
@@ -275,6 +275,20 @@ public class TerrainSampler : MonoBehaviour
                     verticalLinkDirection = soMap._matrix[ i , j + 1 ].worldPosition - soMap._matrix[ i , j ].worldPosition;
                 }
 
+                float horizontalNeuronLinkLength;
+                float verticalNeuronLinkLength;
+
+                if ( i + 1 >= matrixSideLength || j + 1 >= matrixSideLength )
+                {
+                    horizontalNeuronLinkLength = 50;
+                    verticalNeuronLinkLength = 50;
+                }
+                else
+                {
+                    horizontalNeuronLinkLength = Math.Abs( (soMap._matrix[ i + 1 , j ].worldPosition - soMap._matrix[ i , j ].worldPosition).magnitude ) / 2;
+                    verticalNeuronLinkLength = Math.Abs( (soMap._matrix[ i , j + 1 ].worldPosition - soMap._matrix[ i , j ].worldPosition).magnitude ) / 2;
+                }
+
                 // Changing their position
                 horizontalNeuronLinksMatrix[ i , j ].transform.position = horizontalLinkNewPosition;
                 verticalNeuronLinksMatrix[ i , j ].transform.position = verticalLinkNewPosition;
@@ -285,8 +299,8 @@ public class TerrainSampler : MonoBehaviour
 
                 // Changinge their scale
                 // TODO: make this values parametric in order to fit with every change the SOM has (only the length must change)
-                horizontalNeuronLinksMatrix[ i , j ].transform.localScale = new Vector3( 5 , 5 , 50 );
-                verticalNeuronLinksMatrix[ i , j ].transform.localScale = new Vector3( 5 , 5 , 50 );
+                horizontalNeuronLinksMatrix[ i , j ].transform.localScale = new Vector3( 5 , 5 , horizontalNeuronLinkLength );
+                verticalNeuronLinksMatrix[ i , j ].transform.localScale = new Vector3( 5 , 5 , verticalNeuronLinkLength );
 
                 // Raising everything at the end
                 Vector3 raisedPosition = neuronPointsMatrix[ i , j ].transform.position;
