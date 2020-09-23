@@ -29,6 +29,15 @@ namespace SOM.NeuronNamespace
 
         private double mapSize = 5000;                                                                  // Remember to change if # of tiles or dimensions change
 
+        public bool isSea;                                                                              // If the neuron is right above the sea
+        public enum TerrainType
+        {
+            PLAIN,
+            HILL,
+            UNSUITABLE
+        }
+        public TerrainType terrainType;
+
         /*
          * It's the sin(alfa) where alfa is the angle between the side (inputPoint (sample) and Neuron.worldPosition (with y = 0)) and 
          * the side (inputPoint (sample) and Neuron.worldPosition (with y = 0))

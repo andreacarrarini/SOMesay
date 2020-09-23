@@ -42,7 +42,9 @@ public class TerrainSampler : MonoBehaviour
     public SOMap soMap;                                                                             // The actual SOM
     private IEnumerator coroutine;
     public int number = 0;                                                                          // Just for debug
-    float mapMagicGraphHeight = 751f;
+    private float mapMagicGraphHeight = 751f;
+    public Terrain[] terrains;                                                                             // Array of all active terrains
+    private TerrainAnalyzer terrainAnalyzer;
 
     void Start()
     {
@@ -114,12 +116,21 @@ public class TerrainSampler : MonoBehaviour
         return terrains;
     }
 
-    public void Sampling()
+    public int GetTerrainsIndexByPoint(Vector3 point)
+    {
+        float xOffset = samplingStartingPoint.x;                                                    // To make it independent from the tile positioning
+        float zOffset = samplingStartingPoint.z;
+
+        return ( int ) (Math.Floor( (point.z + Math.Abs( zOffset )) / tileDimension ) * somDimensionInTiles +
+                            Math.Floor( (point.x + Math.Abs( xOffset )) / tileDimension ));
+    }
+
+        public void Sampling()
     {
         pointToSample = new Vector3();
         float xOffset = samplingStartingPoint.x;                                                    // To make it independent from the tile positioning
         float zOffset = samplingStartingPoint.z;
-        Terrain[] terrains = Terrain.activeTerrains;                                                // Array of all active terrains
+        terrains = Terrain.activeTerrains;
         terrains = SortActiveTerrains( terrains , xOffset , zOffset );
 
         for ( int j = 0; j < somDimensionInTiles; j++ )
