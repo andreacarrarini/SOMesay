@@ -24,22 +24,85 @@ public class TerrainAnalyzer : MonoBehaviour
 {
     TerrainSampler terrainSampler;
 
-    void Start()
+    private void Start()
     {
-        
+        terrainSampler = gameObject.GetComponent<TerrainSampler>();
     }
 
-    public void AnalyzeTerrainUnderNodes(SOMap soMap)
+    public void AnalyzeTerrainUnderNodes( SOMap soMap )
     {
+
         foreach ( Neuron neuron in soMap._matrix )
         {
             Vector3 neuronPosition = neuron.worldPosition;
             float realTerrainHeight = terrainSampler.terrains[ terrainSampler.GetTerrainsIndexByPoint( neuronPosition ) ].SampleHeight( neuronPosition );
 
+            if ( realTerrainHeight > neuronPosition.y )
+            {
+                neuronPosition.y += Math.Abs( realTerrainHeight - neuronPosition.y );
+                neuron.worldPosition = neuronPosition;
+            }
+            else if ( neuronPosition.y > realTerrainHeight )
+            {
+                neuronPosition.y -= Math.Abs( neuronPosition.y - realTerrainHeight );
+                neuron.worldPosition = neuronPosition;
+            }
 
-            // TODO: Fix the height mistake and then change the material of neurons according to a logic
-            if ( true )
-                return;
+            realTerrainHeight = terrainSampler.terrains[ terrainSampler.GetTerrainsIndexByPoint( neuronPosition ) ].SampleHeight( neuronPosition );
+
+            if ( realTerrainHeight < 100 )
+            {
+                neuron.terrainType = Neuron.TerrainType.SEA;
+            }
+            else if ( realTerrainHeight >= 100 && realTerrainHeight < 120 )
+            {
+                neuron.terrainType = Neuron.TerrainType.SHORE;
+            }
+
+            terrainSampler.UpdateRealSom3DNet();
+
+            terrainSampler.BuildRealSom3DNet();
         }
+    }
+
+    public void ClassifyZoneNodes( SOMap soMap )
+    {
+        for ( int i = 0; i < soMap._height; i++ )
+        {
+            for ( int j = 0; j < soMap._width; j++ )
+            {
+                if ( Math.Abs( soMap._matrix[ i - 1 , j ].worldPosition.y - soMap._matrix[ i , j ].worldPosition.y ) < 50 ||
+                    Math.Abs( soMap._matrix[ i , j - 1 ].worldPosition.y - soMap._matrix[ i , j ].worldPosition.y ) < 50 )
+                {
+                    Neuron neuron = ( Neuron ) soMap._matrix[ i , j ];
+                    neuron.terrainType = Neuron.TerrainType.PLAIN;
+
+                    // Useless???
+                    soMap._matrix[ i , j ] = neuron;
+                }
+                // Might need to add also > 50 (but let's see)
+                else if ( Math.Abs( soMap._matrix[ i - 1 , j ].worldPosition.y - soMap._matrix[ i , j ].worldPosition.y ) < 100 || 
+                    Math.Abs( soMap._matrix[ i , j - 1 ].worldPosition.y - soMap._matrix[ i , j ].worldPosition.y ) < 100 )
+                {
+                    Neuron neuron = ( Neuron ) soMap._matrix[ i , j ];
+                    neuron.terrainType = Neuron.TerrainType.HILL;
+
+                    // Useless???
+                    soMap._matrix[ i , j ] = neuron;
+                }
+                else
+                {
+                    Neuron neuron = ( Neuron ) soMap._matrix[ i , j ];
+                    neuron.terrainType = Neuron.TerrainType.UNSUITABLE;
+
+                    // Useless???
+                    soMap._matrix[ i , j ] = neuron;
+                }
+            }
+        }
+    }
+
+    public void ChangeNeuronsTexture(SOMap soMap)
+    {
     }
 }

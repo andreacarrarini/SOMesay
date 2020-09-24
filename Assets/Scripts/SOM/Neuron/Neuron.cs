@@ -29,9 +29,10 @@ namespace SOM.NeuronNamespace
 
         private double mapSize = 5000;                                                                  // Remember to change if # of tiles or dimensions change
 
-        public bool isSea;                                                                              // If the neuron is right above the sea
         public enum TerrainType
         {
+            SEA,
+            SHORE,
             PLAIN,
             HILL,
             UNSUITABLE

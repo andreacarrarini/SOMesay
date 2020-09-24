@@ -38,16 +38,18 @@ public class TerrainSampler : MonoBehaviour
     private GameObject[,] verticalNeuronLinksMatrix;
     private float linkLength;                                                                       // The length of the link between 2 neurons
     private float neuronPointScale;                                                                 // The scale of the sphere in Unity
-    private float som3DNetHeight = 400;                                                             // The height offset of the 3D net
+    public float som3DNetHeight = 400;                                                             // The height offset of the 3D net
     public SOMap soMap;                                                                             // The actual SOM
     private IEnumerator coroutine;
     public int number = 0;                                                                          // Just for debug
     private float mapMagicGraphHeight = 751f;
-    public Terrain[] terrains;                                                                             // Array of all active terrains
+    public Terrain[] terrains;                                                                      // Array of all active terrains
     private TerrainAnalyzer terrainAnalyzer;
 
     void Start()
     {
+        terrainAnalyzer = gameObject.GetComponent<TerrainAnalyzer>();
+
         PrepareInputMatrix();
 
         GetBottomLeftCorner();
@@ -194,7 +196,7 @@ public class TerrainSampler : MonoBehaviour
 
     public void SomTrainLauncher()                                                                  // Launches the SOM training
     {
-        soMap = new SOMap( matrixSideLength , matrixSideLength , 3 , numberOfIterations , leariningRate , this );
+        soMap = new SOMap( matrixSideLength , matrixSideLength , 3 , numberOfIterations , leariningRate , this, terrainAnalyzer );
         soMap.SetNeuronsInitialWorldPositions( matrixSideLength , somDimensionInTiles , tileDimension , samplingStartingPoint.x ,
             samplingStartingPoint.z , som3DNetHeight , mapMagicGraphHeight );
 

@@ -24,16 +24,17 @@ namespace SOM
     public class SOMap
     {
         public INeuron[,] _matrix;
-        internal int _height;
-        internal int _width;
+        public int _height;
+        public int _width;
         internal double _matrixRadius;
         internal double _numberOfIterations;
         internal double _timeConstant;
         internal double _learningRate;
         public TerrainSampler terrainSampler;
+        public TerrainAnalyzer terrainAnalyzer;
         //private IEnumerator coroutine;
 
-        public SOMap( int width , int height , int inputDimension , int numberOfIterations , double learningRate , TerrainSampler ts )
+        public SOMap( int width , int height , int inputDimension , int numberOfIterations , double learningRate , TerrainSampler ts, TerrainAnalyzer ta )
         {
             _width = width;
             _height = height;
@@ -46,6 +47,7 @@ namespace SOM
 
             InitializeConnections( inputDimension );
             terrainSampler = ts;
+            terrainAnalyzer = ta;
         }
 
         /*
@@ -106,6 +108,8 @@ namespace SOM
             MonoBehaviour.print( terrainSampler.number );
 
             terrainSampler.BuildRealSom3DNet();
+
+            terrainAnalyzer.AnalyzeTerrainUnderNodes( this );
         }
 
         internal (int xStart, int xEnd, int yStart, int yEnd) GetRadiusIndexes( INeuron bmu , double currentRadius )
@@ -206,7 +210,7 @@ namespace SOM
                     //_matrix[ i , j ].worldPosition = neuronWorldPosition;
 
                     Vector3 neuronWorldPosition = new Vector3( xOffset + i * (somDimensionInTiles * tileDimension / matrixSideLength) ,
-                        mapMagicGraphHeight / 2 , zOffset + j * (somDimensionInTiles * tileDimension / matrixSideLength) );
+                        0 , zOffset + j * (somDimensionInTiles * tileDimension / matrixSideLength) );
                     _matrix[ i , j ].worldPosition = neuronWorldPosition;
                 }
             }
