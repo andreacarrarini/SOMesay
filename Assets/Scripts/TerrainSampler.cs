@@ -18,6 +18,8 @@ using UnityEngine;
 using SOM;
 using SOM.VectorNamespace;
 using System;
+using MapMagic;
+using MapMagic.Terrains;
 
 public class TerrainSampler : MonoBehaviour
 {
@@ -87,47 +89,50 @@ public class TerrainSampler : MonoBehaviour
 
     public Terrain[] SortActiveTerrains( Terrain[] terrains , float xOffset , float zOffset )
     {
+        Terrain[] sortedTerrains = new Terrain[ terrains.Length ];
         for ( int i = 0; i < terrains.Length; i++ )
         {
-            Terrain currentTerrain = terrains[ i ];
+            Terrain currentMinimum = terrains[ i ];
+            float currentMinimumPosition = currentMinimum.transform.position.z / 100 + currentMinimum.transform.position.x / 1000;
+            int j = 0;
+            int currentMinimumIndex = j;
 
-            int position = 0;
-
-            //for ( int j = 0; j < terrains.Length; j++ )
-            //{
-            //    Terrain comparisonTerrain = terrains[ j ];
-
-            //    if ( currentTerrain.transform.position.x > comparisonTerrain.transform.position.x )
-            //        position++;
-
-            //    if ( currentTerrain.transform.position.z > comparisonTerrain.transform.position.z )
-            //        position++;
-            //}
-
-            foreach ( Terrain terrain in terrains )
+            for ( j = i; j < terrains.Length; j++ )
             {
-                position = ( int ) (Math.Floor( (terrain.transform.position.z + Math.Abs( zOffset )) / tileDimension ) * somDimensionInTiles +
-                    Math.Floor( (terrain.transform.position.x + Math.Abs( xOffset )) / tileDimension ));
+                float currentPosition = terrains[ j ].transform.position.z / 100 + terrains[ j ].transform.position.x / 1000;
 
-                int swapPosition = ( int ) (Math.Floor( (terrains[ position ].transform.position.z + Math.Abs( zOffset )) / tileDimension ) * somDimensionInTiles +
-                    Math.Floor( (terrains[ position ].transform.position.x + Math.Abs( xOffset )) / tileDimension ));
-
-                // Swap
-                Terrain swapTerrain = terrains[ position ];
-                terrains[ position ] = terrain;
-                terrains[ swapPosition ] = swapTerrain;
+                if ( currentPosition < currentMinimumPosition )
+                {
+                    currentMinimum = terrains[ j ];
+                    currentMinimumPosition = currentPosition;
+                    currentMinimumIndex = j;
+                }
             }
+            Terrain swapTerrain = terrains[ currentMinimumIndex ];
+            terrains[ currentMinimumIndex ] = terrains[ i ];
+            terrains[ i ] = swapTerrain;
         }
+
         return terrains;
     }
 
+    // TODO: Optimize this method (too much intensive for what it has to do)
     public int GetTerrainsIndexByPoint( Vector3 point )
     {
-        float xOffset = samplingStartingPoint.x;                                                    // To make it independent from the tile positioning
-        float zOffset = samplingStartingPoint.z;
+        //float xOffset = samplingStartingPoint.x;                                                    // To make it independent from the tile positioning
+        //float zOffset = samplingStartingPoint.z;
 
-        return ( int ) (Math.Floor( (point.z + Math.Abs( zOffset )) / tileDimension ) * somDimensionInTiles +
-                            Math.Floor( (point.x + Math.Abs( xOffset )) / tileDimension ));
+        //return ( int ) (Math.Floor( (point.z + Math.Abs( zOffset )) / tileDimension ) * somDimensionInTiles +
+        //                    Math.Floor( (point.x + Math.Abs( xOffset )) / tileDimension ));
+
+        int terrainIndex = 0;
+        while ( terrains[ terrainIndex ].transform.position.x > point.x || Math.Abs( point.x - terrains[ terrainIndex ].transform.position.x ) >= tileDimension
+                            || terrains[ terrainIndex ].transform.position.z > point.z || Math.Abs( point.z - terrains[ terrainIndex ].transform.position.z ) >= tileDimension )
+        {
+            if ( terrainIndex < terrains.Length - 1 )
+                terrainIndex++;                                                         // Looking for the correct terrain to sample
+        }
+        return terrainIndex;
     }
 
     public void Sampling()
@@ -159,22 +164,24 @@ public class TerrainSampler : MonoBehaviour
                         //    terrainIndex++;                                                         // Looking for the correct terrain to sample
                         //}
 
-                        //while ( terrains[ terrainIndex ].transform.position.x > pointToSample.x || Math.Abs( pointToSample.x - terrains[ terrainIndex ].transform.position.x ) >= tileDimension
-                        //    || terrains[ terrainIndex ].transform.position.z > pointToSample.z || Math.Abs( pointToSample.z - terrains[ terrainIndex ].transform.position.z ) >= tileDimension )
-                        //{
-                        //    if ( terrainIndex < terrains.Length - 1)
-                        //        terrainIndex++;                                                         // Looking for the correct terrain to sample
-                        //}
+                        while ( terrains[ terrainIndex ].transform.position.x > pointToSample.x || Math.Abs( pointToSample.x - terrains[ terrainIndex ].transform.position.x ) >= tileDimension
+                            || terrains[ terrainIndex ].transform.position.z > pointToSample.z || Math.Abs( pointToSample.z - terrains[ terrainIndex ].transform.position.z ) >= tileDimension )
+                        {
+                            if ( terrainIndex < terrains.Length - 1 )
+                                terrainIndex++;                                                         // Looking for the correct terrain to sample
+                        }
 
                         // THIS NEEDS TO GET UNCOMMENTED
                         #region try_to_fix_sampling
 
-                        terrainIndex = ( int ) (Math.Floor( (pointToSample.z + Math.Abs( zOffset )) / tileDimension ) * somDimensionInTiles +
-                            Math.Floor( (pointToSample.x + Math.Abs( xOffset )) / tileDimension ));
+                        //terrainIndex = GetTerrainsIndexByPoint( pointToSample );
 
-                        Terrain activeTerrain = Terrains[ terrainIndex ];
-                        if ( !activeTerrain.isActiveAndEnabled )
-                            return;
+                        //terrainIndex = ( int ) (Math.Floor( (pointToSample.z + Math.Abs( zOffset )) / tileDimension ) * somDimensionInTiles +
+                        //    Math.Floor( (pointToSample.x + Math.Abs( xOffset )) / tileDimension ));
+
+                        //Terrain activeTerrain = Terrains[ terrainIndex ];
+                        //if ( !activeTerrain.isActiveAndEnabled )
+                        //    return;
                         #endregion 
 
                         //Camera.main.transform.position = pointToSample;
