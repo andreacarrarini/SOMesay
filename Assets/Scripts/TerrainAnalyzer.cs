@@ -32,23 +32,27 @@ public class TerrainAnalyzer : MonoBehaviour
     public void AnalyzeTerrainUnderNodes( SOMap soMap )
     {
 
-        foreach ( Neuron neuron in soMap._matrix )
+        foreach ( Neuron neuron in soMap.Matrix )
         {
-            Vector3 neuronPosition = neuron.worldPosition;
-            float realTerrainHeight = terrainSampler.terrains[ terrainSampler.GetTerrainsIndexByPoint( neuronPosition ) ].SampleHeight( neuronPosition );
+            Vector3 neuronPosition = neuron.GetworldPosition();
+            //Camera.main.transform.position = neuronPosition;
+            float realTerrainHeight = terrainSampler.Terrains[ terrainSampler.GetTerrainsIndexByPoint( neuronPosition ) ].SampleHeight( neuronPosition );
+
+            // DEBUG
+            //print( terrainSampler.GetTerrainsIndexByPoint( neuronPosition ) );
 
             if ( realTerrainHeight > neuronPosition.y )
             {
                 neuronPosition.y += Math.Abs( realTerrainHeight - neuronPosition.y );
-                neuron.worldPosition = neuronPosition;
+                neuron.SetworldPosition( neuronPosition );
             }
             else if ( neuronPosition.y > realTerrainHeight )
             {
                 neuronPosition.y -= Math.Abs( neuronPosition.y - realTerrainHeight );
-                neuron.worldPosition = neuronPosition;
+                neuron.SetworldPosition( neuronPosition );
             }
 
-            realTerrainHeight = terrainSampler.terrains[ terrainSampler.GetTerrainsIndexByPoint( neuronPosition ) ].SampleHeight( neuronPosition );
+            realTerrainHeight = terrainSampler.Terrains[ terrainSampler.GetTerrainsIndexByPoint( neuronPosition ) ].SampleHeight( neuronPosition );
 
             if ( realTerrainHeight < 100 )
             {
@@ -58,51 +62,75 @@ public class TerrainAnalyzer : MonoBehaviour
             {
                 neuron.terrainType = Neuron.TerrainType.SHORE;
             }
-
-            terrainSampler.UpdateRealSom3DNet();
-
-            terrainSampler.BuildRealSom3DNet();
         }
+
+        terrainSampler.UpdateRealSom3DNet();
+
+        //print( terrainSampler.Terrains[ terrainSampler.GetTerrainsIndexByPoint( new Vector3( -3250 , 0 , -2750 ) ) ].SampleHeight( new Vector3( -4000 , 0 , -250 ) ) );
+        //print( terrainSampler.GetTerrainsIndexByPoint( new Vector3( -3250 , 0 , -2750 ) ) );
+        //print( terrainSampler.Terrains[ terrainSampler.GetTerrainsIndexByPoint( new Vector3( -4000 , 0 , -250 ) ) ].SampleHeight( new Vector3( -4000 , 0 , -250 ) ) );
+        //print( terrainSampler.GetTerrainsIndexByPoint( new Vector3( -4000 , 0 , -250 ) ) );
+
+        //terrainSampler.BuildRealSom3DNet();
     }
 
     public void ClassifyZoneNodes( SOMap soMap )
     {
-        for ( int i = 0; i < soMap._height; i++ )
+        for ( int i = 0; i < soMap.Height; i++ )
         {
-            for ( int j = 0; j < soMap._width; j++ )
+            for ( int j = 0; j < soMap.Width; j++ )
             {
-                if ( Math.Abs( soMap._matrix[ i - 1 , j ].worldPosition.y - soMap._matrix[ i , j ].worldPosition.y ) < 50 ||
-                    Math.Abs( soMap._matrix[ i , j - 1 ].worldPosition.y - soMap._matrix[ i , j ].worldPosition.y ) < 50 )
+                // TODO: fix this stuff, for now it only skips
+                if ( i == 0 || j == 0 )
                 {
-                    Neuron neuron = ( Neuron ) soMap._matrix[ i , j ];
-                    neuron.terrainType = Neuron.TerrainType.PLAIN;
+                    Neuron neuron = ( Neuron ) soMap.Matrix[ i , j ];
+                    neuron.terrainType = Neuron.TerrainType.SEA;
+                }
+                else if ( Math.Abs( soMap.Matrix[ i - 1 , j ].GetworldPosition().y - soMap.Matrix[ i , j ].GetworldPosition().y ) < 50 ||
+                    Math.Abs( soMap.Matrix[ i , j - 1 ].GetworldPosition().y - soMap.Matrix[ i , j ].GetworldPosition().y ) < 50 )
+                {
+                    Neuron neuron = ( Neuron ) soMap.Matrix[ i , j ];
+                    if ( neuron.terrainType != Neuron.TerrainType.SEA || neuron.terrainType != Neuron.TerrainType.SHORE )
+                    {
+                        neuron.terrainType = Neuron.TerrainType.PLAIN;
 
-                    // Useless???
-                    soMap._matrix[ i , j ] = neuron;
+                        // Useless???
+                        soMap.Matrix[ i , j ] = neuron;
+                    }
                 }
                 // Might need to add also > 50 (but let's see)
-                else if ( Math.Abs( soMap._matrix[ i - 1 , j ].worldPosition.y - soMap._matrix[ i , j ].worldPosition.y ) < 100 || 
-                    Math.Abs( soMap._matrix[ i , j - 1 ].worldPosition.y - soMap._matrix[ i , j ].worldPosition.y ) < 100 )
+                else if ( Math.Abs( soMap.Matrix[ i - 1 , j ].GetworldPosition().y - soMap.Matrix[ i , j ].GetworldPosition().y ) < 100 ||
+                    Math.Abs( soMap.Matrix[ i , j - 1 ].GetworldPosition().y - soMap.Matrix[ i , j ].GetworldPosition().y ) < 100 )
                 {
-                    Neuron neuron = ( Neuron ) soMap._matrix[ i , j ];
-                    neuron.terrainType = Neuron.TerrainType.HILL;
+                    Neuron neuron = ( Neuron ) soMap.Matrix[ i , j ];
+                    if ( neuron.terrainType != Neuron.TerrainType.SEA || neuron.terrainType != Neuron.TerrainType.SHORE )
+                    {
+                        neuron.terrainType = Neuron.TerrainType.HILL;
 
-                    // Useless???
-                    soMap._matrix[ i , j ] = neuron;
+                        // Useless???
+                        soMap.Matrix[ i , j ] = neuron;
+                    }
                 }
                 else
                 {
-                    Neuron neuron = ( Neuron ) soMap._matrix[ i , j ];
-                    neuron.terrainType = Neuron.TerrainType.UNSUITABLE;
+                    Neuron neuron = ( Neuron ) soMap.Matrix[ i , j ];
+                    if ( neuron.terrainType != Neuron.TerrainType.SEA || neuron.terrainType != Neuron.TerrainType.SHORE )
+                    {
+                        neuron.terrainType = Neuron.TerrainType.UNSUITABLE;
 
-                    // Useless???
-                    soMap._matrix[ i , j ] = neuron;
+                        // Useless???
+                        soMap.Matrix[ i , j ] = neuron;
+                    }
                 }
             }
         }
     }
 
-    public void ChangeNeuronsTexture(SOMap soMap)
+    public void ChangeNeuronsTexture( GameObject[,] neuronPointsMatrix )
     {
+        foreach ( GameObject neuronPoint in neuronPointsMatrix )
+        {
+            neuronPoint.GetComponent<MeshRenderer>().material = Resources.Load( "Materials/Sea" ) as Material;
+        }
     }
 }

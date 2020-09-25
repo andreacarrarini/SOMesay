@@ -27,7 +27,9 @@ namespace SOM.NeuronNamespace
 
     public interface INeuron
     {
-        Vector3 worldPosition { get; set; }                                                         // Get/Set the world position in the scene
+        Vector3 GetworldPosition();
+        void SetworldPosition( Vector3 value );
+
         int X { get; set; }                                                                         // These properties determine the position of the neuron in the matrix
         int Y { get; set; }
         IVector Weights { get; }                                                                    // This object represents all the weighted connections that are attached to this neuron

@@ -23,31 +23,38 @@ namespace SOM
 {
     public class SOMap
     {
-        public INeuron[,] _matrix;
-        public int _height;
-        public int _width;
+        private INeuron[,] matrix;
+        private int height;
+        private int width;
         internal double _matrixRadius;
         internal double _numberOfIterations;
         internal double _timeConstant;
         internal double _learningRate;
-        public TerrainSampler terrainSampler;
-        public TerrainAnalyzer terrainAnalyzer;
+        private TerrainSampler terrainSampler;
+        private TerrainAnalyzer terrainAnalyzer;
+
+        public INeuron[,] Matrix { get => matrix; set => matrix = value; }
+        public int Height { get => height; set => height = value; }
+        public int Width { get => width; set => width = value; }
+        public TerrainSampler TerrainSampler { get => terrainSampler; set => terrainSampler = value; }
+        public TerrainAnalyzer TerrainAnalyzer { get => terrainAnalyzer; set => terrainAnalyzer = value; }
+
         //private IEnumerator coroutine;
 
         public SOMap( int width , int height , int inputDimension , int numberOfIterations , double learningRate , TerrainSampler ts, TerrainAnalyzer ta )
         {
-            _width = width;
-            _height = height;
-            _matrix = new INeuron[ _width , _height ];
+            Width = width;
+            Height = height;
+            Matrix = new INeuron[ Width , Height ];
             _numberOfIterations = numberOfIterations;
             _learningRate = learningRate;
 
-            _matrixRadius = Math.Max( _width , _height ) / 2;
+            _matrixRadius = Math.Max( Width , Height ) / 2;
             _timeConstant = _numberOfIterations / Math.Log( _matrixRadius );
 
             InitializeConnections( inputDimension );
-            terrainSampler = ts;
-            terrainAnalyzer = ta;
+            TerrainSampler = ts;
+            TerrainAnalyzer = ta;
         }
 
         /*
@@ -101,15 +108,19 @@ namespace SOM
                             }
                         }
                     }
-                    terrainSampler.number++;
+                    TerrainSampler.number++;
                 }
                 iteration++;
             }
-            MonoBehaviour.print( terrainSampler.number );
+            MonoBehaviour.print( TerrainSampler.number );
 
-            terrainSampler.BuildRealSom3DNet();
+            TerrainSampler.BuildRealSom3DNet();
 
-            terrainAnalyzer.AnalyzeTerrainUnderNodes( this );
+            TerrainAnalyzer.AnalyzeTerrainUnderNodes( this );
+
+            TerrainAnalyzer.ClassifyZoneNodes( this );
+
+            TerrainAnalyzer.ChangeNeuronsTexture( TerrainSampler.NeuronPointsMatrix );
         }
 
         internal (int xStart, int xEnd, int yStart, int yEnd) GetRadiusIndexes( INeuron bmu , double currentRadius )
@@ -118,23 +129,23 @@ namespace SOM
             xStart = (xStart < 0) ? 0 : xStart;
 
             var xEnd = ( int ) (xStart + (currentRadius * 2) + 1);
-            if ( xEnd > _width ) xEnd = _width;
+            if ( xEnd > Width ) xEnd = Width;
 
             var yStart = ( int ) (bmu.Y - currentRadius - 1);
             yStart = (yStart < 0) ? 0 : yStart;
 
             var yEnd = ( int ) (yStart + (currentRadius * 2) + 1);
-            if ( yEnd > _height ) yEnd = _height;
+            if ( yEnd > Height ) yEnd = Height;
 
             return (xStart, xEnd, yStart, yEnd);
         }
 
         internal INeuron GetNeuron( int indexX , int indexY )
         {
-            if ( indexX > _width || indexY > _height )
+            if ( indexX > Width || indexY > Height )
                 throw new ArgumentException( "Wrong index!" );
 
-            return _matrix[ indexX , indexY ];
+            return Matrix[ indexX , indexY ];
         }
 
         /*
@@ -153,12 +164,12 @@ namespace SOM
 
         internal INeuron CalculateBMU( IVector input )
         {
-            INeuron bmu = _matrix[ 0 , 0 ];
+            INeuron bmu = Matrix[ 0 , 0 ];
             double bestDist = Double.PositiveInfinity;
 
-            for ( int i = 0; i < _width; i++ )
+            for ( int i = 0; i < Width; i++ )
             {
-                for ( int j = 0; j < _height; j++ )
+                for ( int j = 0; j < Height; j++ )
                 {
                     /*
                      * Attempt to make the distance a real distance from points in space and not from random weights
@@ -170,15 +181,15 @@ namespace SOM
                         vectorToComputeDistanceWithWorldPosition.Add( 0.5 );
                     }
 
-                    vectorToComputeDistanceWithWorldPosition[ 0 ] = _matrix[ i , j ].worldPosition.x;
-                    vectorToComputeDistanceWithWorldPosition[ 1 ] = _matrix[ i , j ].worldPosition.y;
-                    vectorToComputeDistanceWithWorldPosition[ 2 ] = _matrix[ i , j ].worldPosition.z;
+                    vectorToComputeDistanceWithWorldPosition[ 0 ] = Matrix[ i , j ].GetworldPosition().x;
+                    vectorToComputeDistanceWithWorldPosition[ 1 ] = Matrix[ i , j ].GetworldPosition().y;
+                    vectorToComputeDistanceWithWorldPosition[ 2 ] = Matrix[ i , j ].GetworldPosition().z;
 
                     var distance = input.EuclidianDistance( vectorToComputeDistanceWithWorldPosition );
 
                     if ( distance < bestDist )
                     {
-                        bmu = _matrix[ i , j ];
+                        bmu = Matrix[ i , j ];
                         bestDist = distance;
                     }
                 }
@@ -189,11 +200,11 @@ namespace SOM
 
         private void InitializeConnections( int inputDimension )
         {
-            for ( int i = 0; i < _width; i++ )
+            for ( int i = 0; i < Width; i++ )
             {
-                for ( int j = 0; j < _height; j++ )
+                for ( int j = 0; j < Height; j++ )
                 {
-                    _matrix[ i , j ] = new Neuron( inputDimension ) { X = i , Y = j };
+                    Matrix[ i , j ] = new Neuron( inputDimension ) { X = i , Y = j };
                 }
             }
         }
@@ -211,7 +222,7 @@ namespace SOM
 
                     Vector3 neuronWorldPosition = new Vector3( xOffset + i * (somDimensionInTiles * tileDimension / matrixSideLength) ,
                         0 , zOffset + j * (somDimensionInTiles * tileDimension / matrixSideLength) );
-                    _matrix[ i , j ].worldPosition = neuronWorldPosition;
+                    Matrix[ i , j ].SetworldPosition( neuronWorldPosition );
                 }
             }
         }
