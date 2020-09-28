@@ -26,6 +26,7 @@ namespace SOM.NeuronNamespace
         public int Y { get; set; }
         public IVector Weights { get; }
         public TerrainType terrainType { get => _terrainType; set => _terrainType = value; }
+        public GameObject NeuronPointGameObject { get => neuronPoint; set => neuronPoint = value; }
 
         private double mapSize = 5000;                                                                  // Remember to change if # of tiles or dimensions change
 
@@ -39,6 +40,7 @@ namespace SOM.NeuronNamespace
         }
         private TerrainType _terrainType;
         private Vector3 worldPosition;
+        private GameObject neuronPoint;
 
         public Vector3 GetworldPosition()
         {
@@ -56,7 +58,7 @@ namespace SOM.NeuronNamespace
          */
         private float contributeByDistance;
 
-        public Neuron( int numOfWeights )
+        public Neuron( int numOfWeights, GameObject neuronPointGameObject )
         {
             var random = new System.Random();
             Weights = new Vector();                                                                     // Weights of the connections are initialized to random values
@@ -71,6 +73,8 @@ namespace SOM.NeuronNamespace
 
                 //Weights.Add( 1 );
             }
+
+            NeuronPointGameObject = neuronPointGameObject;
         }
 
         public double Distance( INeuron neuron )

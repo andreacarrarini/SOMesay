@@ -41,7 +41,7 @@ namespace SOM
 
         //private IEnumerator coroutine;
 
-        public SOMap( int width , int height , int inputDimension , int numberOfIterations , double learningRate , TerrainSampler ts, TerrainAnalyzer ta )
+        public SOMap( int width , int height , int inputDimension , int numberOfIterations , double learningRate , TerrainSampler ts , TerrainAnalyzer ta )
         {
             Width = width;
             Height = height;
@@ -52,8 +52,8 @@ namespace SOM
             _matrixRadius = Math.Max( Width , Height ) / 2;
             _timeConstant = _numberOfIterations / Math.Log( _matrixRadius );
 
-            InitializeConnections( inputDimension );
             TerrainSampler = ts;
+            InitializeConnections( inputDimension );
             TerrainAnalyzer = ta;
         }
 
@@ -204,7 +204,7 @@ namespace SOM
             {
                 for ( int j = 0; j < Height; j++ )
                 {
-                    Matrix[ i , j ] = new Neuron( inputDimension ) { X = i , Y = j };
+                    Matrix[ i , j ] = new Neuron( inputDimension , TerrainSampler.NeuronPointsMatrix[ i , j ] ) { X = i , Y = j };
                 }
             }
         }
