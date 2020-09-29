@@ -30,11 +30,15 @@ namespace SOM.NeuronNamespace
 
         private double mapSize = 5000;                                                                  // Remember to change if # of tiles or dimensions change
 
+        /*
+         * I put PLAIN first cause terrainType seems to be initialized as the first value in the enum
+         * so if I put SEA or SHORE the TerrainAnalyzer will not change the terrainType value of the nodes
+         */
         public enum TerrainType
         {
+            PLAIN,
             SEA,
             SHORE,
-            PLAIN,
             HILL,
             UNSUITABLE
         }

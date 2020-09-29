@@ -54,8 +54,6 @@ public class TerrainAnalyzer : MonoBehaviour
                 neuron.SetworldPosition( neuronPosition );
             }
 
-            realTerrainHeight = TerrainSampler.Terrains[ TerrainSampler.GetTerrainsIndexByPoint( neuronPosition ) ].SampleHeight( neuronPosition );
-
             if ( realTerrainHeight < 100 )
             {
                 neuron.terrainType = Neuron.TerrainType.SEA;
@@ -161,9 +159,11 @@ public class TerrainAnalyzer : MonoBehaviour
                     break;
             }
         }
-        //foreach ( GameObject neuronPoint in neuronPointsMatrix )
-        //{
-        //    neuronPoint.GetComponent<MeshRenderer>().material = Resources.Load( "Materials/Sea" ) as Material;
-        //}
+    }
+
+    // TODO
+    public void ChangeLinksMaterial()
+    {
+
     }
 }

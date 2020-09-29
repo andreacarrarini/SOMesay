@@ -97,6 +97,7 @@ public class TerrainSampler : MonoBehaviour
     public Terrain[] SortActiveTerrains( Terrain[] terrains , float xOffset , float zOffset )
     {
         Terrain[] sortedTerrains = new Terrain[ terrains.Length ];
+        sortedTerrains = terrains;
         for ( int i = 0; i < terrains.Length; i++ )
         {
             Terrain currentMinimum = terrains[ i ];
@@ -118,11 +119,14 @@ public class TerrainSampler : MonoBehaviour
 
             swapTerrainRef( ref terrains[ currentMinimumIndex ] , ref terrains[ i ] );
 
-            //Terrain swapTerrain = terrains[ currentMinimumIndex ];
-            //terrains[ currentMinimumIndex ] = terrains[ i ];
-            //terrains[ i ] = swapTerrain;
-            print( terrains[ i ].transform.position );
+            //sortedTerrains[ currentMinimumIndex ] = terrains[ i ];
+            //sortedTerrains[ i ] = terrains[ currentMinimumIndex ];
         }
+
+        //foreach ( Terrain item in sortedTerrains )
+        //{
+        //    print( item.transform.position );
+        //}
 
         return terrains;
     }
