@@ -120,7 +120,9 @@ namespace SOM
 
             TerrainAnalyzer.ClassifyZoneNodes( this );
 
-            TerrainAnalyzer.ChangeNeuronsTexture( TerrainSampler.NeuronPointsMatrix );
+            TerrainAnalyzer.ChangeNeuronsMaterial( TerrainSampler.NeuronPointsMatrix );
+
+            TerrainAnalyzer.ChangeLinksMaterial();
         }
 
         internal (int xStart, int xEnd, int yStart, int yEnd) GetRadiusIndexes( INeuron bmu , double currentRadius )

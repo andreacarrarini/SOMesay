@@ -53,6 +53,9 @@ public class TerrainSampler : MonoBehaviour
     public float Som3DNetHeight { get => som3DNetHeight; set => som3DNetHeight = value; }
     public SOMap SoMap { get => soMap; set => soMap = value; }
     public Terrain[] Terrains { get => terrains; set => terrains = value; }
+    public GameObject[,] HorizontalNeuronLinksMatrix { get => horizontalNeuronLinksMatrix; set => horizontalNeuronLinksMatrix = value; }
+    public GameObject[,] VerticalNeuronLinksMatrix { get => verticalNeuronLinksMatrix; set => verticalNeuronLinksMatrix = value; }
+    public int MatrixSideLength { get => matrixSideLength; set => matrixSideLength = value; }
 
     void Start()
     {
@@ -87,7 +90,7 @@ public class TerrainSampler : MonoBehaviour
         }
     }
 
-    public void swapTerrainRef(ref Terrain terrain1, ref Terrain terrain2)
+    public void swapTerrainRef( ref Terrain terrain1 , ref Terrain terrain2 )
     {
         Terrain temp = terrain1;
         terrain1 = terrain2;
@@ -235,8 +238,8 @@ public class TerrainSampler : MonoBehaviour
 
     public void SomTrainLauncher()                                                                  // Launches the SOM training
     {
-        SoMap = new SOMap( matrixSideLength , matrixSideLength , 3 , numberOfIterations , leariningRate , this , terrainAnalyzer );
-        SoMap.SetNeuronsInitialWorldPositions( matrixSideLength , somDimensionInTiles , tileDimension , samplingStartingPoint.x ,
+        SoMap = new SOMap( MatrixSideLength , MatrixSideLength , 3 , numberOfIterations , leariningRate , this , terrainAnalyzer );
+        SoMap.SetNeuronsInitialWorldPositions( MatrixSideLength , somDimensionInTiles , tileDimension , samplingStartingPoint.x ,
             samplingStartingPoint.z , Som3DNetHeight , mapMagicGraphHeight );
 
         coroutine = SoMap.TrainCoroutine( InputMatrix );
@@ -246,9 +249,9 @@ public class TerrainSampler : MonoBehaviour
 
     public void PrintSomWeights()                                                                   // DEBUG
     {
-        for ( int _i = 0; _i < matrixSideLength; _i++ )
+        for ( int _i = 0; _i < MatrixSideLength; _i++ )
         {
-            for ( int _j = 0; _j < matrixSideLength; _j++ )
+            for ( int _j = 0; _j < MatrixSideLength; _j++ )
             {
                 print( SoMap.Matrix[ _i , _j ].Weights[ 0 ] + " " + SoMap.Matrix[ _i , _j ].Weights[ 1 ] + " " + SoMap.Matrix[ _i , _j ].Weights[ 2 ] );
             }
@@ -259,18 +262,18 @@ public class TerrainSampler : MonoBehaviour
     {
         GameObject neuronPoint = ( GameObject ) Resources.Load( "NeuronPoint" );
         GameObject neuronLink = ( GameObject ) Resources.Load( "NeuronLinkFather" );
-        visualSomMatrix = new Vector3[ matrixSideLength , matrixSideLength ];
-        NeuronPointsMatrix = new GameObject[ matrixSideLength , matrixSideLength ];
-        horizontalNeuronLinksMatrix = new GameObject[ matrixSideLength , matrixSideLength ];
-        verticalNeuronLinksMatrix = new GameObject[ matrixSideLength , matrixSideLength ];
+        visualSomMatrix = new Vector3[ MatrixSideLength , MatrixSideLength ];
+        NeuronPointsMatrix = new GameObject[ MatrixSideLength , MatrixSideLength ];
+        HorizontalNeuronLinksMatrix = new GameObject[ MatrixSideLength , MatrixSideLength ];
+        VerticalNeuronLinksMatrix = new GameObject[ MatrixSideLength , MatrixSideLength ];
 
-        for ( int i = 0; i < matrixSideLength; i++ )
+        for ( int i = 0; i < MatrixSideLength; i++ )
         {
-            for ( int j = 0; j < matrixSideLength; j++ )
+            for ( int j = 0; j < MatrixSideLength; j++ )
             {
                 NeuronPointsMatrix[ i , j ] = Instantiate( neuronPoint , new Vector3( 0 , 0 , 0 ) , Quaternion.identity );
-                horizontalNeuronLinksMatrix[ i , j ] = Instantiate( neuronLink , new Vector3( 0 , 0 , 0 ) , Quaternion.identity );
-                verticalNeuronLinksMatrix[ i , j ] = Instantiate( neuronLink , new Vector3( 0 , 0 , 0 ) , Quaternion.identity );
+                HorizontalNeuronLinksMatrix[ i , j ] = Instantiate( neuronLink , new Vector3( 0 , 0 , 0 ) , Quaternion.identity );
+                VerticalNeuronLinksMatrix[ i , j ] = Instantiate( neuronLink , new Vector3( 0 , 0 , 0 ) , Quaternion.identity );
             }
         }
     }
@@ -281,16 +284,16 @@ public class TerrainSampler : MonoBehaviour
         GameObject neuronLink = ( GameObject ) Resources.Load( "NeuronLinkFather" );
         visualSomMatrix = new Vector3[ samplingVectorDimension , samplingVectorDimension ];
         NeuronPointsMatrix = new GameObject[ samplingVectorDimension , samplingVectorDimension ];
-        horizontalNeuronLinksMatrix = new GameObject[ samplingVectorDimension , samplingVectorDimension ];
-        verticalNeuronLinksMatrix = new GameObject[ samplingVectorDimension , samplingVectorDimension ];
+        HorizontalNeuronLinksMatrix = new GameObject[ samplingVectorDimension - 1 , samplingVectorDimension - 1 ];
+        VerticalNeuronLinksMatrix = new GameObject[ samplingVectorDimension - 1 , samplingVectorDimension - 1 ];
 
         for ( int i = 0; i < samplingVectorDimension; i++ )
         {
             for ( int j = 0; j < samplingVectorDimension; j++ )
             {
                 NeuronPointsMatrix[ i , j ] = Instantiate( neuronPoint , new Vector3( 0 , 0 , 0 ) , Quaternion.identity );
-                horizontalNeuronLinksMatrix[ i , j ] = Instantiate( neuronLink , new Vector3( 0 , 0 , 0 ) , Quaternion.identity );
-                verticalNeuronLinksMatrix[ i , j ] = Instantiate( neuronLink , new Vector3( 0 , 0 , 0 ) , Quaternion.identity );
+                HorizontalNeuronLinksMatrix[ i , j ] = Instantiate( neuronLink , new Vector3( 0 , 0 , 0 ) , Quaternion.identity );
+                VerticalNeuronLinksMatrix[ i , j ] = Instantiate( neuronLink , new Vector3( 0 , 0 , 0 ) , Quaternion.identity );
             }
         }
     }
@@ -301,9 +304,9 @@ public class TerrainSampler : MonoBehaviour
         linkLength = 10;
         neuronPointScale = 20;
 
-        for ( int i = 0; i < matrixSideLength; i++ )
+        for ( int i = 0; i < MatrixSideLength; i++ )
         {
-            for ( int j = 0; j < matrixSideLength; j++ )
+            for ( int j = 0; j < MatrixSideLength; j++ )
             {
                 // NEURONS
                 NeuronPointsMatrix[ i , j ].transform.position = SoMap.Matrix[ i , j ].GetworldPosition();
@@ -318,7 +321,7 @@ public class TerrainSampler : MonoBehaviour
                 horizontalLinkNewPosition = SoMap.Matrix[ i , j ].GetworldPosition();
                 verticalLinkNewPosition = SoMap.Matrix[ i , j ].GetworldPosition();
 
-                if ( i + 1 < matrixSideLength && j + 1 < matrixSideLength )
+                if ( i + 1 < MatrixSideLength && j + 1 < MatrixSideLength )
                 {
                     horizontalLinkNewPosition = (SoMap.Matrix[ i , j ].GetworldPosition() + SoMap.Matrix[ i + 1 , j ].GetworldPosition()) / 2;
                     verticalLinkNewPosition = (SoMap.Matrix[ i , j ].GetworldPosition() + SoMap.Matrix[ i , j + 1 ].GetworldPosition()) / 2;
@@ -330,7 +333,7 @@ public class TerrainSampler : MonoBehaviour
                 float horizontalNeuronLinkLength;
                 float verticalNeuronLinkLength;
 
-                if ( i + 1 >= matrixSideLength || j + 1 >= matrixSideLength )
+                if ( i + 1 >= MatrixSideLength || j + 1 >= MatrixSideLength )
                 {
                     horizontalNeuronLinkLength = 50;
                     verticalNeuronLinkLength = 50;
@@ -342,39 +345,39 @@ public class TerrainSampler : MonoBehaviour
                 }
 
                 // Changing their position
-                horizontalNeuronLinksMatrix[ i , j ].transform.position = horizontalLinkNewPosition;
-                verticalNeuronLinksMatrix[ i , j ].transform.position = verticalLinkNewPosition;
+                HorizontalNeuronLinksMatrix[ i , j ].transform.position = horizontalLinkNewPosition;
+                VerticalNeuronLinksMatrix[ i , j ].transform.position = verticalLinkNewPosition;
 
                 // Changing their rotation
-                horizontalNeuronLinksMatrix[ i , j ].transform.rotation = Quaternion.LookRotation( horizontalLinkDirection , horizontalNeuronLinksMatrix[ i , j ].transform.forward );
-                verticalNeuronLinksMatrix[ i , j ].transform.rotation = Quaternion.LookRotation( verticalLinkDirection , horizontalNeuronLinksMatrix[ i , j ].transform.forward );
+                HorizontalNeuronLinksMatrix[ i , j ].transform.rotation = Quaternion.LookRotation( horizontalLinkDirection , HorizontalNeuronLinksMatrix[ i , j ].transform.forward );
+                VerticalNeuronLinksMatrix[ i , j ].transform.rotation = Quaternion.LookRotation( verticalLinkDirection , HorizontalNeuronLinksMatrix[ i , j ].transform.forward );
 
                 // Changinge their scale
                 // TODO: make this values parametric in order to fit with every change the SOM has (only the length must change)
-                horizontalNeuronLinksMatrix[ i , j ].transform.localScale = new Vector3( 5 , 5 , horizontalNeuronLinkLength );
-                verticalNeuronLinksMatrix[ i , j ].transform.localScale = new Vector3( 5 , 5 , verticalNeuronLinkLength );
+                HorizontalNeuronLinksMatrix[ i , j ].transform.localScale = new Vector3( 5 , 5 , horizontalNeuronLinkLength );
+                VerticalNeuronLinksMatrix[ i , j ].transform.localScale = new Vector3( 5 , 5 , verticalNeuronLinkLength );
 
                 // Raising everything at the end
                 Vector3 raisedPosition = NeuronPointsMatrix[ i , j ].transform.position;
                 raisedPosition.y += Som3DNetHeight;
                 NeuronPointsMatrix[ i , j ].transform.position = raisedPosition;
 
-                raisedPosition = horizontalNeuronLinksMatrix[ i , j ].transform.position;
+                raisedPosition = HorizontalNeuronLinksMatrix[ i , j ].transform.position;
                 raisedPosition.y += Som3DNetHeight;
-                horizontalNeuronLinksMatrix[ i , j ].transform.position = raisedPosition;
+                HorizontalNeuronLinksMatrix[ i , j ].transform.position = raisedPosition;
 
-                raisedPosition = verticalNeuronLinksMatrix[ i , j ].transform.position;
+                raisedPosition = VerticalNeuronLinksMatrix[ i , j ].transform.position;
                 raisedPosition.y += Som3DNetHeight;
-                verticalNeuronLinksMatrix[ i , j ].transform.position = raisedPosition;
+                VerticalNeuronLinksMatrix[ i , j ].transform.position = raisedPosition;
             }
         }
     }
 
     public void UpdateRealSom3DNet()                                                                // Updates the positions of neuronPoints and Links during the iteration
     {
-        for ( int i = 0; i < matrixSideLength; i++ )
+        for ( int i = 0; i < MatrixSideLength; i++ )
         {
-            for ( int j = 0; j < matrixSideLength; j++ )
+            for ( int j = 0; j < MatrixSideLength; j++ )
             {
                 // NEURONS
                 NeuronPointsMatrix[ i , j ].transform.position = SoMap.Matrix[ i , j ].GetworldPosition();
@@ -388,7 +391,7 @@ public class TerrainSampler : MonoBehaviour
                 horizontalLinkNewPosition = SoMap.Matrix[ i , j ].GetworldPosition();
                 verticalLinkNewPosition = SoMap.Matrix[ i , j ].GetworldPosition();
 
-                if ( i + 1 < matrixSideLength && j + 1 < matrixSideLength )
+                if ( i + 1 < MatrixSideLength && j + 1 < MatrixSideLength )
                 {
                     horizontalLinkNewPosition = (SoMap.Matrix[ i , j ].GetworldPosition() + SoMap.Matrix[ i + 1 , j ].GetworldPosition()) / 2;
                     verticalLinkNewPosition = (SoMap.Matrix[ i , j ].GetworldPosition() + SoMap.Matrix[ i , j + 1 ].GetworldPosition()) / 2;
@@ -398,25 +401,25 @@ public class TerrainSampler : MonoBehaviour
                 }
 
                 // Changing their position
-                horizontalNeuronLinksMatrix[ i , j ].transform.position = horizontalLinkNewPosition;
-                verticalNeuronLinksMatrix[ i , j ].transform.position = verticalLinkNewPosition;
+                HorizontalNeuronLinksMatrix[ i , j ].transform.position = horizontalLinkNewPosition;
+                VerticalNeuronLinksMatrix[ i , j ].transform.position = verticalLinkNewPosition;
 
                 // Changing their rotation
-                horizontalNeuronLinksMatrix[ i , j ].transform.rotation = Quaternion.LookRotation( horizontalLinkDirection , horizontalNeuronLinksMatrix[ i , j ].transform.forward );
-                verticalNeuronLinksMatrix[ i , j ].transform.rotation = Quaternion.LookRotation( verticalLinkDirection , horizontalNeuronLinksMatrix[ i , j ].transform.forward );
+                HorizontalNeuronLinksMatrix[ i , j ].transform.rotation = Quaternion.LookRotation( horizontalLinkDirection , HorizontalNeuronLinksMatrix[ i , j ].transform.forward );
+                VerticalNeuronLinksMatrix[ i , j ].transform.rotation = Quaternion.LookRotation( verticalLinkDirection , HorizontalNeuronLinksMatrix[ i , j ].transform.forward );
 
                 // Raising everything at the end
                 Vector3 raisedPosition = NeuronPointsMatrix[ i , j ].transform.position;
                 raisedPosition.y += Som3DNetHeight;
                 NeuronPointsMatrix[ i , j ].transform.position = raisedPosition;
 
-                raisedPosition = horizontalNeuronLinksMatrix[ i , j ].transform.position;
+                raisedPosition = HorizontalNeuronLinksMatrix[ i , j ].transform.position;
                 raisedPosition.y += Som3DNetHeight;
-                horizontalNeuronLinksMatrix[ i , j ].transform.position = raisedPosition;
+                HorizontalNeuronLinksMatrix[ i , j ].transform.position = raisedPosition;
 
-                raisedPosition = verticalNeuronLinksMatrix[ i , j ].transform.position;
+                raisedPosition = VerticalNeuronLinksMatrix[ i , j ].transform.position;
                 raisedPosition.y += Som3DNetHeight;
-                verticalNeuronLinksMatrix[ i , j ].transform.position = raisedPosition;
+                VerticalNeuronLinksMatrix[ i , j ].transform.position = raisedPosition;
             }
         }
     }
@@ -454,29 +457,29 @@ public class TerrainSampler : MonoBehaviour
                 }
 
                 // Changing their position
-                horizontalNeuronLinksMatrix[ i , j ].transform.position = horizontalLinkNewPosition;
-                verticalNeuronLinksMatrix[ i , j ].transform.position = verticalLinkNewPosition;
+                HorizontalNeuronLinksMatrix[ i , j ].transform.position = horizontalLinkNewPosition;
+                VerticalNeuronLinksMatrix[ i , j ].transform.position = verticalLinkNewPosition;
 
                 // Changing their rotation
-                horizontalNeuronLinksMatrix[ i , j ].transform.rotation = Quaternion.LookRotation( horizontalLinkDirection , horizontalNeuronLinksMatrix[ i , j ].transform.forward );
-                verticalNeuronLinksMatrix[ i , j ].transform.rotation = Quaternion.LookRotation( verticalLinkDirection , horizontalNeuronLinksMatrix[ i , j ].transform.forward );
+                HorizontalNeuronLinksMatrix[ i , j ].transform.rotation = Quaternion.LookRotation( horizontalLinkDirection , HorizontalNeuronLinksMatrix[ i , j ].transform.forward );
+                VerticalNeuronLinksMatrix[ i , j ].transform.rotation = Quaternion.LookRotation( verticalLinkDirection , HorizontalNeuronLinksMatrix[ i , j ].transform.forward );
 
                 // Changinge their scale
-                horizontalNeuronLinksMatrix[ i , j ].transform.localScale = new Vector3( 5 , 5 , 50 );
-                verticalNeuronLinksMatrix[ i , j ].transform.localScale = new Vector3( 5 , 5 , 50 );
+                HorizontalNeuronLinksMatrix[ i , j ].transform.localScale = new Vector3( 5 , 5 , 50 );
+                VerticalNeuronLinksMatrix[ i , j ].transform.localScale = new Vector3( 5 , 5 , 50 );
 
                 // Raising everything at the end
                 Vector3 raisedPosition = NeuronPointsMatrix[ i , j ].transform.position;
                 raisedPosition.y += Som3DNetHeight;
                 NeuronPointsMatrix[ i , j ].transform.position = raisedPosition;
 
-                raisedPosition = horizontalNeuronLinksMatrix[ i , j ].transform.position;
+                raisedPosition = HorizontalNeuronLinksMatrix[ i , j ].transform.position;
                 raisedPosition.y += Som3DNetHeight;
-                horizontalNeuronLinksMatrix[ i , j ].transform.position = raisedPosition;
+                HorizontalNeuronLinksMatrix[ i , j ].transform.position = raisedPosition;
 
-                raisedPosition = verticalNeuronLinksMatrix[ i , j ].transform.position;
+                raisedPosition = VerticalNeuronLinksMatrix[ i , j ].transform.position;
                 raisedPosition.y += Som3DNetHeight;
-                verticalNeuronLinksMatrix[ i , j ].transform.position = raisedPosition;
+                VerticalNeuronLinksMatrix[ i , j ].transform.position = raisedPosition;
             }
         }
     }

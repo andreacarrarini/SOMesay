@@ -126,44 +126,97 @@ public class TerrainAnalyzer : MonoBehaviour
         }
     }
 
-    public void ChangeNeuronsTexture( GameObject[,] neuronPointsMatrix )
+    public void ChangeNeuronsMaterial( GameObject[,] neuronPointsMatrix )
     {
 
-        foreach ( Neuron neuron in TerrainSampler.SoMap.Matrix)
+        foreach ( Neuron neuron in TerrainSampler.SoMap.Matrix )
         {
-            switch ( neuron.terrainType )
-            {
-                case Neuron.TerrainType.SEA:
+            ChangeMaterialOnTerrainType( neuron.NeuronPointGameObject , neuron.terrainType );
+            //switch ( neuron.terrainType )
+            //{
+            //    case Neuron.TerrainType.SEA:
 
-                    neuron.NeuronPointGameObject.GetComponent<MeshRenderer>().material = Resources.Load( "Materials/Sea" ) as Material;
-                    break;
+            //        neuron.NeuronPointGameObject.GetComponent<MeshRenderer>().material = Resources.Load( "Materials/Sea" ) as Material;
+            //        break;
 
-                case Neuron.TerrainType.SHORE:
+            //    case Neuron.TerrainType.SHORE:
 
-                    neuron.NeuronPointGameObject.GetComponent<MeshRenderer>().material = Resources.Load( "Materials/Shore" ) as Material;
-                    break;
+            //        neuron.NeuronPointGameObject.GetComponent<MeshRenderer>().material = Resources.Load( "Materials/Shore" ) as Material;
+            //        break;
 
-                case Neuron.TerrainType.PLAIN:
+            //    case Neuron.TerrainType.PLAIN:
 
-                    neuron.NeuronPointGameObject.GetComponent<MeshRenderer>().material = Resources.Load( "Materials/Plain" ) as Material;
-                    break;
+            //        neuron.NeuronPointGameObject.GetComponent<MeshRenderer>().material = Resources.Load( "Materials/Plain" ) as Material;
+            //        break;
 
-                case Neuron.TerrainType.HILL:
+            //    case Neuron.TerrainType.HILL:
 
-                    neuron.NeuronPointGameObject.GetComponent<MeshRenderer>().material = Resources.Load( "Materials/Hill" ) as Material;
-                    break;
+            //        neuron.NeuronPointGameObject.GetComponent<MeshRenderer>().material = Resources.Load( "Materials/Hill" ) as Material;
+            //        break;
 
-                case Neuron.TerrainType.UNSUITABLE:
+            //    case Neuron.TerrainType.UNSUITABLE:
 
-                    neuron.NeuronPointGameObject.GetComponent<MeshRenderer>().material = Resources.Load( "Materials/Unsuitable" ) as Material;
-                    break;
-            }
+            //        neuron.NeuronPointGameObject.GetComponent<MeshRenderer>().material = Resources.Load( "Materials/Unsuitable" ) as Material;
+            //        break;
+            //}
         }
     }
 
     // TODO
     public void ChangeLinksMaterial()
     {
+        // -1 to avoid index out of range
+        for ( int i = 0; i < terrainSampler.MatrixSideLength - 1; i++ )
+        {
+            for ( int j = 0; j < terrainSampler.MatrixSideLength - 1; j++ )
+            {
+                // Horizontal
+                Neuron leftNeuron = terrainSampler.SoMap.GetNeuron( i , j ) as Neuron;
+                Neuron rightNeuron = terrainSampler.SoMap.GetNeuron( i + 1 , j ) as Neuron;
+                if ( leftNeuron.terrainType == rightNeuron.terrainType )
+                {
+                    ChangeMaterialOnTerrainType( terrainSampler.HorizontalNeuronLinksMatrix[ i , j ] , leftNeuron.terrainType );
+                }
 
+                // Vertical
+                Neuron downNeuron = terrainSampler.SoMap.GetNeuron( i , j ) as Neuron;
+                Neuron upNeuron = terrainSampler.SoMap.GetNeuron( i + 1 , j ) as Neuron;
+                if ( downNeuron.terrainType == upNeuron.terrainType )
+                {
+                    ChangeMaterialOnTerrainType( terrainSampler.VerticalNeuronLinksMatrix[ i , j ] , downNeuron.terrainType );
+                }
+            }
+        }
+    }
+
+    public void ChangeMaterialOnTerrainType( GameObject go , Neuron.TerrainType terrainType )
+    {
+        switch ( terrainType )
+        {
+            case Neuron.TerrainType.SEA:
+
+                go.GetComponentInChildren<MeshRenderer>().material = Resources.Load( "Materials/Sea" ) as Material;
+                break;
+
+            case Neuron.TerrainType.SHORE:
+
+                go.GetComponentInChildren<MeshRenderer>().material = Resources.Load( "Materials/Shore" ) as Material;
+                break;
+
+            case Neuron.TerrainType.PLAIN:
+
+                go.GetComponentInChildren<MeshRenderer>().material = Resources.Load( "Materials/Plain" ) as Material;
+                break;
+
+            case Neuron.TerrainType.HILL:
+
+                go.GetComponentInChildren<MeshRenderer>().material = Resources.Load( "Materials/Hill" ) as Material;
+                break;
+
+            case Neuron.TerrainType.UNSUITABLE:
+
+                go.GetComponentInChildren<MeshRenderer>().material = Resources.Load( "Materials/Unsuitable" ) as Material;
+                break;
+        }
     }
 }
