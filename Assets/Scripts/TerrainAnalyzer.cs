@@ -37,12 +37,9 @@ public class TerrainAnalyzer : MonoBehaviour
         foreach ( Neuron neuron in soMap.Matrix )
         {
             Vector3 neuronPosition = neuron.GetworldPosition();
-            //Camera.main.transform.position = neuronPosition;
             float realTerrainHeight = TerrainSampler.Terrains[ TerrainSampler.GetTerrainsIndexByPoint( neuronPosition ) ].SampleHeight( neuronPosition );
 
-            // DEBUG
-            //print( terrainSampler.GetTerrainsIndexByPoint( neuronPosition ) );
-
+            // TO COMMENT IF YOU WANT NO CORRECTION ON SOM
             if ( realTerrainHeight > neuronPosition.y )
             {
                 neuronPosition.y += Math.Abs( realTerrainHeight - neuronPosition.y );
@@ -65,13 +62,6 @@ public class TerrainAnalyzer : MonoBehaviour
         }
 
         TerrainSampler.UpdateRealSom3DNet();
-
-        //print( terrainSampler.Terrains[ terrainSampler.GetTerrainsIndexByPoint( new Vector3( -3250 , 0 , -2750 ) ) ].SampleHeight( new Vector3( -4000 , 0 , -250 ) ) );
-        //print( terrainSampler.GetTerrainsIndexByPoint( new Vector3( -3250 , 0 , -2750 ) ) );
-        //print( terrainSampler.Terrains[ terrainSampler.GetTerrainsIndexByPoint( new Vector3( -4000 , 0 , -250 ) ) ].SampleHeight( new Vector3( -4000 , 0 , -250 ) ) );
-        //print( terrainSampler.GetTerrainsIndexByPoint( new Vector3( -4000 , 0 , -250 ) ) );
-
-        //terrainSampler.BuildRealSom3DNet();
     }
 
     public void ClassifyZoneNodes( SOMap soMap )
@@ -86,7 +76,7 @@ public class TerrainAnalyzer : MonoBehaviour
                     Neuron neuron = ( Neuron ) soMap.Matrix[ i , j ];
                     neuron.terrainType = Neuron.TerrainType.SEA;
                 }
-                else if ( Math.Abs( soMap.Matrix[ i - 1 , j ].GetworldPosition().y - soMap.Matrix[ i , j ].GetworldPosition().y ) < 50 ||
+                else if ( Math.Abs( soMap.Matrix[ i - 1 , j ].GetworldPosition().y - soMap.Matrix[ i , j ].GetworldPosition().y ) < 50 &&
                     Math.Abs( soMap.Matrix[ i , j - 1 ].GetworldPosition().y - soMap.Matrix[ i , j ].GetworldPosition().y ) < 50 )
                 {
                     Neuron neuron = ( Neuron ) soMap.Matrix[ i , j ];
@@ -99,7 +89,7 @@ public class TerrainAnalyzer : MonoBehaviour
                     }
                 }
                 // Might need to add also > 50 (but let's see)
-                else if ( Math.Abs( soMap.Matrix[ i - 1 , j ].GetworldPosition().y - soMap.Matrix[ i , j ].GetworldPosition().y ) < 100 ||
+                else if ( Math.Abs( soMap.Matrix[ i - 1 , j ].GetworldPosition().y - soMap.Matrix[ i , j ].GetworldPosition().y ) < 100 &&
                     Math.Abs( soMap.Matrix[ i , j - 1 ].GetworldPosition().y - soMap.Matrix[ i , j ].GetworldPosition().y ) < 100 )
                 {
                     Neuron neuron = ( Neuron ) soMap.Matrix[ i , j ];
@@ -132,33 +122,6 @@ public class TerrainAnalyzer : MonoBehaviour
         foreach ( Neuron neuron in TerrainSampler.SoMap.Matrix )
         {
             ChangeMaterialOnTerrainType( neuron.NeuronPointGameObject , neuron.terrainType );
-            //switch ( neuron.terrainType )
-            //{
-            //    case Neuron.TerrainType.SEA:
-
-            //        neuron.NeuronPointGameObject.GetComponent<MeshRenderer>().material = Resources.Load( "Materials/Sea" ) as Material;
-            //        break;
-
-            //    case Neuron.TerrainType.SHORE:
-
-            //        neuron.NeuronPointGameObject.GetComponent<MeshRenderer>().material = Resources.Load( "Materials/Shore" ) as Material;
-            //        break;
-
-            //    case Neuron.TerrainType.PLAIN:
-
-            //        neuron.NeuronPointGameObject.GetComponent<MeshRenderer>().material = Resources.Load( "Materials/Plain" ) as Material;
-            //        break;
-
-            //    case Neuron.TerrainType.HILL:
-
-            //        neuron.NeuronPointGameObject.GetComponent<MeshRenderer>().material = Resources.Load( "Materials/Hill" ) as Material;
-            //        break;
-
-            //    case Neuron.TerrainType.UNSUITABLE:
-
-            //        neuron.NeuronPointGameObject.GetComponent<MeshRenderer>().material = Resources.Load( "Materials/Unsuitable" ) as Material;
-            //        break;
-            //}
         }
     }
 
@@ -177,13 +140,21 @@ public class TerrainAnalyzer : MonoBehaviour
                 {
                     ChangeMaterialOnTerrainType( terrainSampler.HorizontalNeuronLinksMatrix[ i , j ] , leftNeuron.terrainType );
                 }
+                else
+                {
+                    ChangeMaterialOnTerrainType( terrainSampler.HorizontalNeuronLinksMatrix[ i , j ] , Neuron.TerrainType.NOCONNECTION );
+                }
 
                 // Vertical
                 Neuron downNeuron = terrainSampler.SoMap.GetNeuron( i , j ) as Neuron;
-                Neuron upNeuron = terrainSampler.SoMap.GetNeuron( i + 1 , j ) as Neuron;
+                Neuron upNeuron = terrainSampler.SoMap.GetNeuron( i , j + 1 ) as Neuron;
                 if ( downNeuron.terrainType == upNeuron.terrainType )
                 {
                     ChangeMaterialOnTerrainType( terrainSampler.VerticalNeuronLinksMatrix[ i , j ] , downNeuron.terrainType );
+                }
+                else
+                {
+                    ChangeMaterialOnTerrainType( terrainSampler.VerticalNeuronLinksMatrix[ i , j ] , Neuron.TerrainType.NOCONNECTION );
                 }
             }
         }
@@ -216,6 +187,11 @@ public class TerrainAnalyzer : MonoBehaviour
             case Neuron.TerrainType.UNSUITABLE:
 
                 go.GetComponentInChildren<MeshRenderer>().material = Resources.Load( "Materials/Unsuitable" ) as Material;
+                break;
+
+            case Neuron.TerrainType.NOCONNECTION:
+
+                go.GetComponentInChildren<MeshRenderer>().material = Resources.Load( "Materials/NoConnection" ) as Material;
                 break;
         }
     }

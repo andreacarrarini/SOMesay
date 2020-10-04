@@ -40,7 +40,8 @@ namespace SOM.NeuronNamespace
             SEA,
             SHORE,
             HILL,
-            UNSUITABLE
+            UNSUITABLE,
+            NOCONNECTION
         }
         private TerrainType _terrainType;
         private Vector3 worldPosition;
