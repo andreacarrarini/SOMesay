@@ -125,7 +125,6 @@ public class TerrainAnalyzer : MonoBehaviour
         }
     }
 
-    // TODO
     public void ChangeLinksMaterial()
     {
         // -1 to avoid index out of range
@@ -194,5 +193,49 @@ public class TerrainAnalyzer : MonoBehaviour
                 go.GetComponentInChildren<MeshRenderer>().material = Resources.Load( "Materials/NoConnection" ) as Material;
                 break;
         }
+    }
+
+    public void PlaceHouses()
+    {
+        var random = new System.Random();
+
+        // starts form 1 and end at -1 to avoid index out of range
+        for ( int i = 1; i < terrainSampler.MatrixSideLength - 1; i++ )
+        {
+            for ( int j = 1; j < terrainSampler.MatrixSideLength - 1; j++ )
+            {
+                Neuron centralNeuron = terrainSampler.SoMap.GetNeuron( i , j ) as Neuron;
+                Neuron leftNeuron = terrainSampler.SoMap.GetNeuron( i - 1 , j ) as Neuron;
+                Neuron rightNeuron = terrainSampler.SoMap.GetNeuron( i + 1 , j ) as Neuron;
+                Neuron downNeuron = terrainSampler.SoMap.GetNeuron( i , j - 1 ) as Neuron;
+                Neuron upNeuron = terrainSampler.SoMap.GetNeuron( i , j + 1 ) as Neuron;
+
+                if ( centralNeuron.terrainType == Neuron.TerrainType.PLAIN )
+                {
+                    if ( centralNeuron.terrainType == leftNeuron.terrainType || centralNeuron.terrainType == rightNeuron.terrainType ||
+                        centralNeuron.terrainType == downNeuron.terrainType || centralNeuron.terrainType == upNeuron.terrainType )
+                    {
+                        string housePath = "Houses/House" + Math.Ceiling( random.NextDouble() * 10 );
+
+                        // For now only a house per neuron
+                        GameObject house = Instantiate( Resources.Load( housePath ) , centralNeuron.GetworldPosition() , Quaternion.identity ) as GameObject;
+
+                        Vector3 raisedPosition = house.transform.position;
+                        raisedPosition.y += 30;
+                        house.transform.position = raisedPosition;
+                    }
+                }
+            }
+        }
+
+        //// For now only a house per neuron
+        //foreach ( Neuron neuron in terrainSampler.SoMap.Matrix )
+        //{
+        //    if ( neuron.terrainType == Neuron.TerrainType.PLAIN )
+        //    {
+        //        string housePath = "Houses/House" + Math.Ceiling( random.NextDouble() * 10 );
+        //        Instantiate( Resources.Load( housePath ) , neuron.GetworldPosition() , Quaternion.identity );
+        //    }
+        //}
     }
 }

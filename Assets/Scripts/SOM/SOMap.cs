@@ -123,6 +123,8 @@ namespace SOM
             TerrainAnalyzer.ChangeNeuronsMaterial( TerrainSampler.NeuronPointsMatrix );
 
             TerrainAnalyzer.ChangeLinksMaterial();
+
+            TerrainAnalyzer.PlaceHouses();
         }
 
         internal (int xStart, int xEnd, int yStart, int yEnd) GetRadiusIndexes( INeuron bmu , double currentRadius )
