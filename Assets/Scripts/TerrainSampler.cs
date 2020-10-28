@@ -57,7 +57,22 @@ public class TerrainSampler : MonoBehaviour
     public GameObject[,] VerticalNeuronLinksMatrix { get => verticalNeuronLinksMatrix; set => verticalNeuronLinksMatrix = value; }
     public int MatrixSideLength { get => matrixSideLength; set => matrixSideLength = value; }
 
-    void Start()
+    //void Start()
+    //{
+    //    terrainAnalyzer = gameObject.GetComponent<TerrainAnalyzer>();
+
+    //    PrepareInputMatrix();
+
+    //    GetBottomLeftCorner();
+
+    //    PrepareRealSomNet3D();
+
+    //    Sampling();
+
+    //    SomTrainLauncher();
+    //}
+
+    public void LaunchAll()
     {
         terrainAnalyzer = gameObject.GetComponent<TerrainAnalyzer>();
 
@@ -70,7 +85,6 @@ public class TerrainSampler : MonoBehaviour
         Sampling();
 
         SomTrainLauncher();
-
     }
 
     public void PrepareInputMatrix()                                                                // Prepares the Input Matrix
