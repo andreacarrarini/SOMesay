@@ -198,12 +198,14 @@ public class TerrainSampler : MonoBehaviour
                         //    terrainIndex++;                                                         // Looking for the correct terrain to sample
                         //}
 
-                        while ( terrains[ terrainIndex ].transform.position.x > pointToSample.x || Math.Abs( pointToSample.x - terrains[ terrainIndex ].transform.position.x ) >= tileDimension
-                            || terrains[ terrainIndex ].transform.position.z > pointToSample.z || Math.Abs( pointToSample.z - terrains[ terrainIndex ].transform.position.z ) >= tileDimension )
-                        {
-                            if ( terrainIndex < terrains.Length - 1 )
-                                terrainIndex++;                                                         // Looking for the correct terrain to sample
-                        }
+                        //while ( terrains[ terrainIndex ].transform.position.x > pointToSample.x || Math.Abs( pointToSample.x - terrains[ terrainIndex ].transform.position.x ) >= tileDimension
+                        //    || terrains[ terrainIndex ].transform.position.z > pointToSample.z || Math.Abs( pointToSample.z - terrains[ terrainIndex ].transform.position.z ) >= tileDimension )
+                        //{
+                        //    if ( terrainIndex < terrains.Length - 1 )
+                        //        terrainIndex++;                                                         // Looking for the correct terrain to sample
+                        //}
+
+                        terrainIndex = GetTerrainsIndexByPoint( pointToSample );
 
                         // THIS NEEDS TO GET UNCOMMENTED
                         #region try_to_fix_sampling
