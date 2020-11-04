@@ -23,6 +23,13 @@ using System;
 public class TerrainAnalyzer : MonoBehaviour
 {
     private TerrainSampler terrainSampler;
+    public enum tiles
+    {
+        DOWNLEFT,
+        UPLEFT,
+        DOWNRIGHT,
+        UPRIGHT
+    }
 
     public TerrainSampler TerrainSampler { get => terrainSampler; set => terrainSampler = value; }
 
@@ -239,8 +246,12 @@ public class TerrainAnalyzer : MonoBehaviour
         //}
     }
 
-    public void ThickenGridOnPlaneNodes()
+    public void ThickenGridOnPlainNodes()
     {
+        bool downLeft = false;
+        bool upLeft = false;
+        bool downRight = false;
+
         // starts form 1 and end at -1 to avoid index out of range
         for ( int i = 1; i < terrainSampler.MatrixSideLength - 1; i++ )
         {
@@ -253,47 +264,172 @@ public class TerrainAnalyzer : MonoBehaviour
                 //Neuron upNeuron = terrainSampler.SoMap.GetNeuron( i , j + 1 ) as Neuron;
 
                 // thicken the grid on up-left, down-left and down-right tiles (in addition to the up-right)
-                if ( leftNeuron.terrainType != Neuron.TerrainType.PLAIN && downNeuron.terrainType != Neuron.TerrainType.PLAIN )
+                if ( centralNeuron.terrainType == Neuron.TerrainType.PLAIN && leftNeuron.terrainType != Neuron.TerrainType.PLAIN && downNeuron.terrainType != Neuron.TerrainType.PLAIN )
                 {
+                    //downLeft = true;
+                    //upLeft = true;
+                    //downRight = true;
+
+                    #region tiles
+
                     // down-left tile
-                    Vector3[,] downLeftTile = new Vector3[ 9 , 9 ];
+                    Vector3[,] downLeftTile = new Vector3[ 10 , 10 ];
 
-                    if ( i > 0 && j > 0 )
+                    downLeftTile = ManageNetTile( downLeftTile , tiles.DOWNLEFT , i , j );
+
+                    // up-left tile
+                    Vector3[,] upLeftTile = new Vector3[ 10 , 10 ];
+
+                    upLeftTile = ManageNetTile( upLeftTile , tiles.UPLEFT , i , j );
+
+                    // down-right tile
+                    Vector3[,] downRightTile = new Vector3[ 10 , 10 ];
+
+                    downRightTile = ManageNetTile( downRightTile , tiles.DOWNRIGHT , i , j );
+
+                    #endregion
+                }
+
+                // thicken only up-left (in addition to the up-right)
+                else if ( centralNeuron.terrainType == Neuron.TerrainType.PLAIN && leftNeuron.terrainType != Neuron.TerrainType.PLAIN && downNeuron.terrainType == Neuron.TerrainType.PLAIN )
+                {
+                    //upLeft = true;
+
+                    #region tiles
+
+                    // up-left tile
+                    Vector3[,] upLeftTile = new Vector3[ 10 , 10 ];
+
+                    upLeftTile = ManageNetTile( upLeftTile , tiles.UPLEFT , i , j );
+
+                    #endregion
+                }
+
+                // thicken only down-right (in addition to the up-right)
+                else if ( centralNeuron.terrainType == Neuron.TerrainType.PLAIN && leftNeuron.terrainType == Neuron.TerrainType.PLAIN && downNeuron.terrainType != Neuron.TerrainType.PLAIN )
+                {
+                    //downRight = true;
+
+                    #region tiles
+
+                    // down-right tile
+                    Vector3[,] downRightTile = new Vector3[ 10 , 10 ];
+
+                    downRightTile = ManageNetTile( downRightTile , tiles.DOWNRIGHT , i , j );
+
+                    #endregion
+                }
+
+                // up-right tile
+                Vector3[,] upRightTile = new Vector3[ 10 , 10 ];
+
+                upRightTile = ManageNetTile( upRightTile , tiles.UPRIGHT , i , j );
+
+            }
+        }
+    }
+
+    public Vector3[,] ManageNetTile( Vector3[,] tile , tiles whichTile , int i , int j )
+    {
+        switch ( whichTile )
+        {
+            case tiles.DOWNLEFT:
+
+                if ( i > 0 && j > 0 )
+                {
+                    Neuron downLeftNeuron = terrainSampler.SoMap.GetNeuron( i - 1 , j - 1 ) as Neuron;
+                    Vector3 downLeftNeuronWorldPosition = downLeftNeuron.GetworldPosition();
+                    for ( int x = 0; x < 10; x++ )
                     {
-                        Neuron downLeftNeuron = terrainSampler.SoMap.GetNeuron( i - 1 , j - 1 ) as Neuron;
-                        Vector3 downLeftNeuronWorldPosition = downLeftNeuron.GetworldPosition();
-                        for ( int x = 1; x < 10; x++ )
+                        for ( int z = 0; z < 10; z++ )
                         {
-                            for ( int z = 1; z < 10; z++ )
-                            {
-                                Vector3 pointToSample = downLeftNeuronWorldPosition + new Vector3( x * 10 , 0 , z * 10 );
-                                pointToSample.y = TerrainSampler.Terrains[ terrainSampler.GetTerrainsIndexByPoint( pointToSample ) ].SampleHeight( pointToSample );
+                            Vector3 pointToSample = downLeftNeuronWorldPosition + new Vector3( x * 10 , 0 , z * 10 );
+                            pointToSample.y = TerrainSampler.Terrains[ terrainSampler.GetTerrainsIndexByPoint( pointToSample ) ].SampleHeight( pointToSample );
 
-                                downLeftTile[ x - 1 , z - 1 ] = pointToSample;
-                            }
+                            tile[ x , z ] = pointToSample;
                         }
                     }
 
                     // Changing the net (of the tile) in the Unity scene
                     terrainSampler.HorizontalNeuronLinksMatrix[ i - 1 , j - 1 ].GetComponentInChildren<MeshRenderer>().enabled = false;
+                    terrainSampler.VerticalNeuronLinksMatrix[ i - 1 , j - 1 ].GetComponentInChildren<MeshRenderer>().enabled = false;
                 }
 
-                // thicken only up-left (in addition to the up-right)
-                else if ( leftNeuron.terrainType != Neuron.TerrainType.PLAIN && downNeuron.terrainType == Neuron.TerrainType.PLAIN )
+                break;
+
+            case tiles.UPLEFT:
+
+                if ( i > 0 && j > 0 )
                 {
+                    Neuron leftNeuron = terrainSampler.SoMap.GetNeuron( i - 1 , j ) as Neuron;
+                    Vector3 leftNeuronWorldPosition = leftNeuron.GetworldPosition();
+                    for ( int x = 0; x < 10; x++ )
+                    {
+                        for ( int z = 0; z < 10; z++ )
+                        {
+                            Vector3 pointToSample = leftNeuronWorldPosition + new Vector3( x * 10 , 0 , z * 10 );
+                            pointToSample.y = TerrainSampler.Terrains[ terrainSampler.GetTerrainsIndexByPoint( pointToSample ) ].SampleHeight( pointToSample );
 
+                            tile[ x , z ] = pointToSample;
+                        }
+                    }
+
+                    // Changing the net (of the tile) in the Unity scene
+                    terrainSampler.HorizontalNeuronLinksMatrix[ i - 1 , j ].GetComponentInChildren<MeshRenderer>().enabled = false;
+                    terrainSampler.VerticalNeuronLinksMatrix[ i - 1 , j ].GetComponentInChildren<MeshRenderer>().enabled = false;
                 }
 
-                // thicken only down-right (in addition to the up-right)
-                else if ( leftNeuron.terrainType == Neuron.TerrainType.PLAIN && downNeuron.terrainType != Neuron.TerrainType.PLAIN )
+                break;
+
+            case tiles.DOWNRIGHT:
+
+                if ( i > 0 && j > 0 )
                 {
+                    Neuron downNeuron = terrainSampler.SoMap.GetNeuron( i , j - 1 ) as Neuron;
+                    Vector3 downNeuronWorldPosition = downNeuron.GetworldPosition();
+                    for ( int x = 0; x < 10; x++ )
+                    {
+                        for ( int z = 0; z < 10; z++ )
+                        {
+                            Vector3 pointToSample = downNeuronWorldPosition + new Vector3( x * 10 , 0 , z * 10 );
+                            pointToSample.y = TerrainSampler.Terrains[ terrainSampler.GetTerrainsIndexByPoint( pointToSample ) ].SampleHeight( pointToSample );
 
+                            tile[ x , z ] = pointToSample;
+                        }
+                    }
+
+                    // Changing the net (of the tile) in the Unity scene
+                    terrainSampler.HorizontalNeuronLinksMatrix[ i , j - 1 ].GetComponentInChildren<MeshRenderer>().enabled = false;
+                    terrainSampler.VerticalNeuronLinksMatrix[ i , j - 1 ].GetComponentInChildren<MeshRenderer>().enabled = false;
                 }
 
-                // thicken the up-right
-                //  TODO
+                break;
 
-            }
+            case tiles.UPRIGHT:
+
+                if ( i > 0 && j > 0 )
+                {
+                    Neuron centralNeuron = terrainSampler.SoMap.GetNeuron( i , j ) as Neuron;
+                    Vector3 centralNeuronWorldPosition = centralNeuron.GetworldPosition();
+                    for ( int x = 0; x < 10; x++ )
+                    {
+                        for ( int z = 0; z < 10; z++ )
+                        {
+                            Vector3 pointToSample = centralNeuronWorldPosition + new Vector3( x * 10 , 0 , z * 10 );
+                            pointToSample.y = TerrainSampler.Terrains[ terrainSampler.GetTerrainsIndexByPoint( pointToSample ) ].SampleHeight( pointToSample );
+
+                            tile[ x , z ] = pointToSample;
+                        }
+                    }
+
+                    // Changing the net (of the tile) in the Unity scene
+                    terrainSampler.HorizontalNeuronLinksMatrix[ i , j ].GetComponentInChildren<MeshRenderer>().enabled = false;
+                    terrainSampler.VerticalNeuronLinksMatrix[ i , j ].GetComponentInChildren<MeshRenderer>().enabled = false;
+                }
+
+                break;
         }
+
+        return tile;
     }
 }

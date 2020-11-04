@@ -126,7 +126,7 @@ namespace SOM
 
             TerrainAnalyzer.PlaceHouses();
 
-            TerrainAnalyzer.ThickenGridOnPlaneNodes();
+            TerrainAnalyzer.ThickenGridOnPlainNodes();
         }
 
         internal (int xStart, int xEnd, int yStart, int yEnd) GetRadiusIndexes( INeuron bmu , double currentRadius )
