@@ -321,10 +321,16 @@ public class TerrainAnalyzer : MonoBehaviour
                 }
 
                 // up-right tile
-                Vector3[,] upRightTile = new Vector3[ 10 , 10 ];
+                if ( centralNeuron.terrainType == Neuron.TerrainType.PLAIN )
+                {
+                    #region tiles
 
-                upRightTile = ManageNetTile( upRightTile , tiles.UPRIGHT , i , j );
+                    Vector3[,] upRightTile = new Vector3[ 10 , 10 ];
 
+                    upRightTile = ManageNetTile( upRightTile , tiles.UPRIGHT , i , j );
+
+                    #endregion
+                }
             }
         }
     }
@@ -343,7 +349,7 @@ public class TerrainAnalyzer : MonoBehaviour
                     {
                         for ( int z = 0; z < 10; z++ )
                         {
-                            Vector3 pointToSample = downLeftNeuronWorldPosition + new Vector3( x * 10 , 0 , z * 10 );
+                            Vector3 pointToSample = downLeftNeuronWorldPosition + new Vector3( x * 40 , 0 , z * 40 );
                             pointToSample.y = TerrainSampler.Terrains[ terrainSampler.GetTerrainsIndexByPoint( pointToSample ) ].SampleHeight( pointToSample );
 
                             tile[ x , z ] = pointToSample;
@@ -353,6 +359,8 @@ public class TerrainAnalyzer : MonoBehaviour
                     // Changing the net (of the tile) in the Unity scene
                     terrainSampler.HorizontalNeuronLinksMatrix[ i - 1 , j - 1 ].GetComponentInChildren<MeshRenderer>().enabled = false;
                     terrainSampler.VerticalNeuronLinksMatrix[ i - 1 , j - 1 ].GetComponentInChildren<MeshRenderer>().enabled = false;
+
+                    BuildSingleTileNet( tile );
                 }
 
                 break;
@@ -367,7 +375,7 @@ public class TerrainAnalyzer : MonoBehaviour
                     {
                         for ( int z = 0; z < 10; z++ )
                         {
-                            Vector3 pointToSample = leftNeuronWorldPosition + new Vector3( x * 10 , 0 , z * 10 );
+                            Vector3 pointToSample = leftNeuronWorldPosition + new Vector3( x * 40 , 0 , z * 40 );
                             pointToSample.y = TerrainSampler.Terrains[ terrainSampler.GetTerrainsIndexByPoint( pointToSample ) ].SampleHeight( pointToSample );
 
                             tile[ x , z ] = pointToSample;
@@ -377,6 +385,8 @@ public class TerrainAnalyzer : MonoBehaviour
                     // Changing the net (of the tile) in the Unity scene
                     terrainSampler.HorizontalNeuronLinksMatrix[ i - 1 , j ].GetComponentInChildren<MeshRenderer>().enabled = false;
                     terrainSampler.VerticalNeuronLinksMatrix[ i - 1 , j ].GetComponentInChildren<MeshRenderer>().enabled = false;
+
+                    BuildSingleTileNet( tile );
                 }
 
                 break;
@@ -391,7 +401,7 @@ public class TerrainAnalyzer : MonoBehaviour
                     {
                         for ( int z = 0; z < 10; z++ )
                         {
-                            Vector3 pointToSample = downNeuronWorldPosition + new Vector3( x * 10 , 0 , z * 10 );
+                            Vector3 pointToSample = downNeuronWorldPosition + new Vector3( x * 40 , 0 , z * 40 );
                             pointToSample.y = TerrainSampler.Terrains[ terrainSampler.GetTerrainsIndexByPoint( pointToSample ) ].SampleHeight( pointToSample );
 
                             tile[ x , z ] = pointToSample;
@@ -401,6 +411,8 @@ public class TerrainAnalyzer : MonoBehaviour
                     // Changing the net (of the tile) in the Unity scene
                     terrainSampler.HorizontalNeuronLinksMatrix[ i , j - 1 ].GetComponentInChildren<MeshRenderer>().enabled = false;
                     terrainSampler.VerticalNeuronLinksMatrix[ i , j - 1 ].GetComponentInChildren<MeshRenderer>().enabled = false;
+
+                    BuildSingleTileNet( tile );
                 }
 
                 break;
@@ -415,7 +427,7 @@ public class TerrainAnalyzer : MonoBehaviour
                     {
                         for ( int z = 0; z < 10; z++ )
                         {
-                            Vector3 pointToSample = centralNeuronWorldPosition + new Vector3( x * 10 , 0 , z * 10 );
+                            Vector3 pointToSample = centralNeuronWorldPosition + new Vector3( x * 40 , 0 , z * 40 );
                             pointToSample.y = TerrainSampler.Terrains[ terrainSampler.GetTerrainsIndexByPoint( pointToSample ) ].SampleHeight( pointToSample );
 
                             tile[ x , z ] = pointToSample;
@@ -425,11 +437,75 @@ public class TerrainAnalyzer : MonoBehaviour
                     // Changing the net (of the tile) in the Unity scene
                     terrainSampler.HorizontalNeuronLinksMatrix[ i , j ].GetComponentInChildren<MeshRenderer>().enabled = false;
                     terrainSampler.VerticalNeuronLinksMatrix[ i , j ].GetComponentInChildren<MeshRenderer>().enabled = false;
+
+                    BuildSingleTileNet( tile );
                 }
 
                 break;
         }
 
         return tile;
+    }
+
+    // Build the visual net for the single tile and classify the nodes
+    public void BuildSingleTileNet( Vector3[,] tile )
+    {
+        GameObject[,] neuronPointsTile = new GameObject[ 10 , 10 ];
+        GameObject[,] horizontalLinksTile = new GameObject[ 10 , 10 ];
+        GameObject[,] verticalLinksTile = new GameObject[ 10 , 10 ];
+
+        GameObject neuronPoint = ( GameObject ) Resources.Load( "NeuronPoint" );
+        GameObject neuronLink = ( GameObject ) Resources.Load( "NeuronLinkFather" );
+
+        // Smaller than the basic neurons
+        int neuronPointScale = 10;
+
+        for ( int j = 0; j < 10; j++ )
+        {
+            for ( int i = 0; i < 10; i++ )
+            {
+                neuronPointsTile[ i , j ] = Instantiate( neuronPoint , new Vector3( 0 , 0 , 0 ) , Quaternion.identity );
+                neuronPointsTile[ i , j ].transform.localScale = new Vector3( neuronPointScale , neuronPointScale , neuronPointScale );
+                neuronPointsTile[ i , j ].transform.position = tile[ i , j ];
+
+                horizontalLinksTile[ i , j ] = Instantiate( neuronLink , new Vector3( 0 , 0 , 0 ) , Quaternion.identity );
+                verticalLinksTile[ i , j ] = Instantiate( neuronLink , new Vector3( 0 , 0 , 0 ) , Quaternion.identity );
+
+                // Need better way
+                if ( i < 9 && j < 9 )
+                {
+                    // Links Position
+                    horizontalLinksTile[ i , j ].transform.position = (tile[ i + 1 , j ] - tile[ i , j ]) / 2;
+                    verticalLinksTile[ i , j ].transform.position = (tile[ i , j + 1 ] - tile[ i , j ]) / 2;
+                }
+
+                // Links Rotation
+                horizontalLinksTile[ i , j ].transform.rotation = Quaternion.LookRotation( horizontalLinksTile[ i , j ].transform.position ,
+                    horizontalLinksTile[ i , j ].transform.forward );
+                verticalLinksTile[ i , j ].transform.rotation = Quaternion.LookRotation( verticalLinksTile[ i , j ].transform.position ,
+                    verticalLinksTile[ i , j ].transform.forward );
+
+                // Need better way
+                if ( i < 9 && j < 9 )
+                {
+                    // Links Scale
+                    horizontalLinksTile[ i , j ].transform.localScale = new Vector3( 5 , 5 , ((tile[ i + 1 , j ] - tile[ i , j ]) / 2).magnitude );
+                    verticalLinksTile[ i , j ].transform.localScale = new Vector3( 5 , 5 , ((tile[ i , j + 1 ] - tile[ i , j ]) / 2).magnitude );
+                }
+
+                // Raising everything
+                Vector3 raisedPosition = neuronPointsTile[ i , j ].transform.position;
+                raisedPosition.y += TerrainSampler.Som3DNetHeight;
+                neuronPointsTile[ i , j ].transform.position = raisedPosition;
+
+                raisedPosition = horizontalLinksTile[ i , j ].transform.position;
+                raisedPosition.y += TerrainSampler.Som3DNetHeight;
+                horizontalLinksTile[ i , j ].transform.position = raisedPosition;
+
+                raisedPosition = verticalLinksTile[ i , j ].transform.position;
+                raisedPosition.y += TerrainSampler.Som3DNetHeight;
+                verticalLinksTile[ i , j ].transform.position = raisedPosition;
+            }
+        }
     }
 }
