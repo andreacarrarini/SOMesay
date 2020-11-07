@@ -273,26 +273,25 @@ public class TerrainAnalyzer : MonoBehaviour
                 if ( centralNeuron.terrainType == Neuron.TerrainType.PLAIN && leftNeuron.terrainType != Neuron.TerrainType.PLAIN
                     && downNeuron.terrainType != Neuron.TerrainType.PLAIN )
                 {
-                    //downLeft = true;
-                    //upLeft = true;
-                    //downRight = true;
-
                     #region tiles
 
                     // down-left tile
                     Vector3[,] downLeftTile = new Vector3[ smallerNeuronsNumber , smallerNeuronsNumber ];
 
                     downLeftTile = ManageNetTile( downLeftTile , tiles.DOWNLEFT , i , j );
+                    centralNeuron.DownLeftTile = downLeftTile;
 
                     // up-left tile
                     Vector3[,] upLeftTile = new Vector3[ smallerNeuronsNumber , smallerNeuronsNumber ];
 
                     upLeftTile = ManageNetTile( upLeftTile , tiles.UPLEFT , i , j );
+                    centralNeuron.UpLeftTile = upLeftTile;
 
                     // down-right tile
                     Vector3[,] downRightTile = new Vector3[ smallerNeuronsNumber , smallerNeuronsNumber ];
 
                     downRightTile = ManageNetTile( downRightTile , tiles.DOWNRIGHT , i , j );
+                    centralNeuron.DownRightTile = downRightTile;
 
                     #endregion
                 }
@@ -301,14 +300,13 @@ public class TerrainAnalyzer : MonoBehaviour
                 else if ( centralNeuron.terrainType == Neuron.TerrainType.PLAIN && leftNeuron.terrainType != Neuron.TerrainType.PLAIN
                     && downNeuron.terrainType == Neuron.TerrainType.PLAIN )
                 {
-                    //upLeft = true;
-
                     #region tiles
 
                     // up-left tile
                     Vector3[,] upLeftTile = new Vector3[ smallerNeuronsNumber , smallerNeuronsNumber ];
 
                     upLeftTile = ManageNetTile( upLeftTile , tiles.UPLEFT , i , j );
+                    centralNeuron.UpLeftTile = upLeftTile;
 
                     #endregion
                 }
@@ -317,14 +315,13 @@ public class TerrainAnalyzer : MonoBehaviour
                 else if ( centralNeuron.terrainType == Neuron.TerrainType.PLAIN && leftNeuron.terrainType == Neuron.TerrainType.PLAIN
                     && downNeuron.terrainType != Neuron.TerrainType.PLAIN )
                 {
-                    //downRight = true;
-
                     #region tiles
 
                     // down-right tile
                     Vector3[,] downRightTile = new Vector3[ smallerNeuronsNumber , smallerNeuronsNumber ];
 
                     downRightTile = ManageNetTile( downRightTile , tiles.DOWNRIGHT , i , j );
+                    centralNeuron.DownRightTile = downRightTile;
 
                     #endregion
                 }
@@ -337,8 +334,48 @@ public class TerrainAnalyzer : MonoBehaviour
                     Vector3[,] upRightTile = new Vector3[ smallerNeuronsNumber , smallerNeuronsNumber ];
 
                     upRightTile = ManageNetTile( upRightTile , tiles.UPRIGHT , i , j );
+                    centralNeuron.UpRightTile = upRightTile;
 
                     #endregion
+                }
+            }
+        }
+
+        // Building the nets
+        for ( int i = 1; i < terrainSampler.MatrixSideLength - 1; i++ )
+        {
+            for ( int j = 1; j < terrainSampler.MatrixSideLength - 1; j++ )
+            {
+                Neuron centralNeuron = terrainSampler.SoMap.GetNeuron( i , j ) as Neuron;
+                Neuron leftNeuron = terrainSampler.SoMap.GetNeuron( i - 1 , j ) as Neuron;
+                Neuron downNeuron = terrainSampler.SoMap.GetNeuron( i , j - 1 ) as Neuron;
+
+                if ( centralNeuron.terrainType == Neuron.TerrainType.PLAIN && leftNeuron.terrainType != Neuron.TerrainType.PLAIN
+                    && downNeuron.terrainType != Neuron.TerrainType.PLAIN )
+                {
+                    BuildSingleTileNet( centralNeuron.DownLeftTile , tiles.DOWNLEFT , centralNeuron );
+                    BuildSingleTileNet( centralNeuron.UpLeftTile , tiles.UPLEFT , centralNeuron );
+                    BuildSingleTileNet( centralNeuron.DownRightTile , tiles.DOWNRIGHT , centralNeuron );
+                }
+
+                // thicken only up-left (in addition to the up-right)
+                else if ( centralNeuron.terrainType == Neuron.TerrainType.PLAIN && leftNeuron.terrainType != Neuron.TerrainType.PLAIN
+                    && downNeuron.terrainType == Neuron.TerrainType.PLAIN )
+                {
+                    BuildSingleTileNet( centralNeuron.UpLeftTile , tiles.UPLEFT , centralNeuron );
+                }
+
+                // thicken only down-right (in addition to the up-right)
+                else if ( centralNeuron.terrainType == Neuron.TerrainType.PLAIN && leftNeuron.terrainType == Neuron.TerrainType.PLAIN
+                    && downNeuron.terrainType != Neuron.TerrainType.PLAIN )
+                {
+                    BuildSingleTileNet( centralNeuron.DownRightTile , tiles.DOWNRIGHT , centralNeuron );
+                }
+
+                // up-right tile
+                if ( centralNeuron.terrainType == Neuron.TerrainType.PLAIN )
+                {
+                    BuildSingleTileNet( centralNeuron.UpRightTile , tiles.UPRIGHT , centralNeuron );
                 }
             }
         }
@@ -370,8 +407,6 @@ public class TerrainAnalyzer : MonoBehaviour
                     // Changing the net (of the tile) in the Unity scene
                     terrainSampler.HorizontalNeuronLinksMatrix[ i - 1 , j - 1 ].GetComponentInChildren<MeshRenderer>().enabled = false;
                     terrainSampler.VerticalNeuronLinksMatrix[ i - 1 , j - 1 ].GetComponentInChildren<MeshRenderer>().enabled = false;
-
-                    BuildSingleTileNet( tile );
                 }
 
                 break;
@@ -396,8 +431,6 @@ public class TerrainAnalyzer : MonoBehaviour
                     // Changing the net (of the tile) in the Unity scene
                     terrainSampler.HorizontalNeuronLinksMatrix[ i - 1 , j ].GetComponentInChildren<MeshRenderer>().enabled = false;
                     terrainSampler.VerticalNeuronLinksMatrix[ i - 1 , j ].GetComponentInChildren<MeshRenderer>().enabled = false;
-
-                    BuildSingleTileNet( tile );
                 }
 
                 break;
@@ -422,8 +455,6 @@ public class TerrainAnalyzer : MonoBehaviour
                     // Changing the net (of the tile) in the Unity scene
                     terrainSampler.HorizontalNeuronLinksMatrix[ i , j - 1 ].GetComponentInChildren<MeshRenderer>().enabled = false;
                     terrainSampler.VerticalNeuronLinksMatrix[ i , j - 1 ].GetComponentInChildren<MeshRenderer>().enabled = false;
-
-                    BuildSingleTileNet( tile );
                 }
 
                 break;
@@ -448,8 +479,6 @@ public class TerrainAnalyzer : MonoBehaviour
                     // Changing the net (of the tile) in the Unity scene
                     terrainSampler.HorizontalNeuronLinksMatrix[ i , j ].GetComponentInChildren<MeshRenderer>().enabled = false;
                     terrainSampler.VerticalNeuronLinksMatrix[ i , j ].GetComponentInChildren<MeshRenderer>().enabled = false;
-
-                    BuildSingleTileNet( tile );
                 }
 
                 break;
@@ -459,7 +488,7 @@ public class TerrainAnalyzer : MonoBehaviour
     }
 
     // Build the visual net for the single tile and classify the nodes
-    public void BuildSingleTileNet( Vector3[,] tile )
+    public void BuildSingleTileNet( Vector3[,] tile , tiles tileType , Neuron neuron )
     {
         GameObject[,] neuronPointsTile = new GameObject[ smallerNeuronsNumber , smallerNeuronsNumber ];
         GameObject[,] horizontalLinksTile = new GameObject[ smallerNeuronsNumber , smallerNeuronsNumber ];
@@ -473,6 +502,7 @@ public class TerrainAnalyzer : MonoBehaviour
 
         // Smaller than the basic neurons
         int neuronPointScale = 10;
+        Neuron rightNeuron;
 
         for ( int j = 0; j < smallerNeuronsNumber; j++ )
         {
@@ -495,6 +525,79 @@ public class TerrainAnalyzer : MonoBehaviour
                     // Links Direction
                     horizontalLinkTileDirection = (tile[ i + 1 , j ] - tile[ i , j ]) / 2;
                     verticalLinkTileDirection = (tile[ i , j + 1 ] - tile[ i , j ]) / 2;
+                }
+                else if ( i == smallerNeuronsNumber - 1 && j < smallerNeuronsNumber - 1 )
+                {
+                    switch ( tileType )
+                    {
+                        case tiles.UPLEFT:
+
+                            // Links Position
+                            if ( neuron.UpRightTile != null )
+                                horizontalLinksTile[ i , j ].transform.position = (neuron.UpRightTile[ 0 , j ] + tile[ i , j ]) / 2;
+                            verticalLinksTile[ i , j ].transform.position = (tile[ i , j + 1 ] + tile[ i , j ]) / 2;
+
+                            // Links Direction
+                            if ( neuron.UpRightTile != null )
+                                horizontalLinkTileDirection = (neuron.UpRightTile[ 0 , j ] - tile[ i , j ]) / 2;
+                            verticalLinkTileDirection = (tile[ i , j + 1 ] - tile[ i , j ]) / 2;
+
+                            break;
+
+                        case tiles.DOWNLEFT:
+
+                            // Links Position
+                            if ( neuron.DownRightTile != null )
+                                horizontalLinksTile[ i , j ].transform.position = (neuron.DownRightTile[ 0 , j ] + tile[ i , j ]) / 2;
+                            verticalLinksTile[ i , j ].transform.position = (tile[ i , j + 1 ] + tile[ i , j ]) / 2;
+
+                            // Links Direction
+                            if ( neuron.DownRightTile != null )
+                                horizontalLinkTileDirection = (neuron.DownRightTile[ 0 , j ] - tile[ i , j ]) / 2;
+                            verticalLinkTileDirection = (tile[ i , j + 1 ] - tile[ i , j ]) / 2;
+
+                            break;
+
+                        case tiles.UPRIGHT:
+
+                            // Check if we are at the border of the SOM matrix
+                            if (neuron.X < TerrainSampler.MatrixSideLength - 1 )
+                            {
+                                rightNeuron = terrainSampler.SoMap.GetNeuron( neuron.X + 1 , neuron.Y ) as Neuron;
+
+                                // Links Position
+                                if ( rightNeuron.UpRightTile != null )
+                                    horizontalLinksTile[ i , j ].transform.position = (rightNeuron.UpRightTile[ 0 , j ] + tile[ i , j ]) / 2;
+                                verticalLinksTile[ i , j ].transform.position = (tile[ i , j + 1 ] + tile[ i , j ]) / 2;
+
+                                // Links Direction
+                                if ( rightNeuron.UpRightTile != null )
+                                    horizontalLinkTileDirection = (rightNeuron.UpRightTile[ 0 , j ] - tile[ i , j ]) / 2;
+                                verticalLinkTileDirection = (tile[ i , j + 1 ] - tile[ i , j ]) / 2;
+                            }
+
+                            break;
+
+                        case tiles.DOWNRIGHT:
+
+                            // Check if we are at the border of the SOM matrix
+                            if ( neuron.X < TerrainSampler.MatrixSideLength - 1 )
+                            {
+                                rightNeuron = terrainSampler.SoMap.GetNeuron( neuron.X + 1 , neuron.Y ) as Neuron;
+
+                                // Links Position
+                                if ( rightNeuron.DownRightTile != null )
+                                    horizontalLinksTile[ i , j ].transform.position = (neuron.DownRightTile[ 0 , j ] + tile[ i , j ]) / 2;
+                                verticalLinksTile[ i , j ].transform.position = (tile[ i , j + 1 ] + tile[ i , j ]) / 2;
+
+                                // Links Direction
+                                if ( rightNeuron.DownRightTile != null )
+                                    horizontalLinkTileDirection = (rightNeuron.DownRightTile[ 0 , j ] - tile[ i , j ]) / 2;
+                                verticalLinkTileDirection = (tile[ i , j + 1 ] - tile[ i , j ]) / 2;
+                            }
+
+                            break;
+                    }
                 }
 
                 // Links Rotation

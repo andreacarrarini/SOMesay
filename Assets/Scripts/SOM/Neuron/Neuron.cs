@@ -27,8 +27,16 @@ namespace SOM.NeuronNamespace
         public IVector Weights { get; }
         public TerrainType terrainType { get => _terrainType; set => _terrainType = value; }
         public GameObject NeuronPointGameObject { get => neuronPoint; set => neuronPoint = value; }
+        public Vector3[,] UpRightTile { get => upRightTile; set => upRightTile = value; }
+        public Vector3[,] UpLeftTile { get => upLeftTile; set => upLeftTile = value; }
+        public Vector3[,] DownRightTile { get => downRightTile; set => downRightTile = value; }
+        public Vector3[,] DownLeftTile { get => downLeftTile; set => downLeftTile = value; }
 
         private double mapSize = 5000;                                                                  // Remember to change if # of tiles or dimensions change
+        private Vector3[,] upRightTile;
+        private Vector3[,] upLeftTile;
+        private Vector3[,] downRightTile;
+        private Vector3[,] downLeftTile;
 
         /*
          * I put PLAIN first cause terrainType seems to be initialized as the first value in the enum
