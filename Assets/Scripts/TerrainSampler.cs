@@ -56,6 +56,8 @@ public class TerrainSampler : MonoBehaviour
     public GameObject[,] HorizontalNeuronLinksMatrix { get => horizontalNeuronLinksMatrix; set => horizontalNeuronLinksMatrix = value; }
     public GameObject[,] VerticalNeuronLinksMatrix { get => verticalNeuronLinksMatrix; set => verticalNeuronLinksMatrix = value; }
     public int MatrixSideLength { get => matrixSideLength; set => matrixSideLength = value; }
+    public int SomDimensionInTiles { get => somDimensionInTiles; set => somDimensionInTiles = value; }
+    public int TileDimension { get => tileDimension; set => tileDimension = value; }
 
     //void Start()
     //{
@@ -159,8 +161,8 @@ public class TerrainSampler : MonoBehaviour
         //terrainIndex = ( int ) (Math.Floor( (point.z + Math.Abs( zOffset )) / tileDimension ) * somDimensionInTiles +
         //                    Math.Floor( (point.x + Math.Abs( xOffset )) / tileDimension ));
 
-        while ( terrains[ terrainIndex ].transform.position.x > point.x || Math.Abs( point.x - terrains[ terrainIndex ].transform.position.x ) >= tileDimension
-                            || terrains[ terrainIndex ].transform.position.z > point.z || Math.Abs( point.z - terrains[ terrainIndex ].transform.position.z ) >= tileDimension )
+        while ( terrains[ terrainIndex ].transform.position.x > point.x || Math.Abs( point.x - terrains[ terrainIndex ].transform.position.x ) >= TileDimension
+                            || terrains[ terrainIndex ].transform.position.z > point.z || Math.Abs( point.z - terrains[ terrainIndex ].transform.position.z ) >= TileDimension )
         {
             if ( terrainIndex < terrains.Length - 1 )
                 terrainIndex++;                                                         // Looking for the correct terrain to sample
@@ -177,9 +179,9 @@ public class TerrainSampler : MonoBehaviour
         Terrains = Terrain.activeTerrains;
         Terrains = SortActiveTerrains( Terrains , xOffset , zOffset );
 
-        for ( int j = 0; j < somDimensionInTiles; j++ )
+        for ( int j = 0; j < SomDimensionInTiles; j++ )
         {
-            for ( int i = 0; i < somDimensionInTiles; i++ )
+            for ( int i = 0; i < SomDimensionInTiles; i++ )
             {
                 for ( int jTile = 0; jTile < tileSubdivision; jTile++ )
                 {
@@ -188,8 +190,8 @@ public class TerrainSampler : MonoBehaviour
                         int terrainIndex = 0;
 
                         // SAMPLING
-                        pointToSample.Set( xOffset + i * tileDimension + iTile * (tileDimension / tileSubdivision) , 0f ,
-                            zOffset + j * tileDimension + jTile * (tileDimension / tileSubdivision) );
+                        pointToSample.Set( xOffset + i * TileDimension + iTile * (TileDimension / tileSubdivision) , 0f ,
+                            zOffset + j * TileDimension + jTile * (TileDimension / tileSubdivision) );
 
                         //while ( terrains[ terrainIndex ].transform.position.x > pointToSample.x || pointToSample.x - terrains[ terrainIndex ].transform.position.x >= tileDimension
                         //    || terrains[ terrainIndex ].transform.position.z > pointToSample.z || pointToSample.z - terrains[ terrainIndex ].transform.position.z >= tileDimension )
@@ -226,8 +228,8 @@ public class TerrainSampler : MonoBehaviour
                         //visualSomMatrix[ i * tileSubdivision + iTile , j * tileSubdivision + jTile ] = pointToSample;
 
                         // The index in the Input Matrix in which the sample will be memorized
-                        int positionInInputMatrix = ( int ) (Math.Floor( (pointToSample.z + Math.Abs( zOffset )) / (tileDimension / tileSubdivision) ) * samplingVectorDimension
-                            + Math.Floor( (pointToSample.x + Math.Abs( xOffset )) / (tileDimension / tileSubdivision) ));
+                        int positionInInputMatrix = ( int ) (Math.Floor( (pointToSample.z + Math.Abs( zOffset )) / (TileDimension / tileSubdivision) ) * samplingVectorDimension
+                            + Math.Floor( (pointToSample.x + Math.Abs( xOffset )) / (TileDimension / tileSubdivision) ));
 
                         InputMatrix[ positionInInputMatrix ][ 0 ] = pointToSample.x;
                         InputMatrix[ positionInInputMatrix ][ 1 ] = pointToSample.y;
@@ -255,7 +257,7 @@ public class TerrainSampler : MonoBehaviour
     public void SomTrainLauncher()                                                                  // Launches the SOM training
     {
         SoMap = new SOMap( MatrixSideLength , MatrixSideLength , 3 , numberOfIterations , leariningRate , this , terrainAnalyzer );
-        SoMap.SetNeuronsInitialWorldPositions( MatrixSideLength , somDimensionInTiles , tileDimension , samplingStartingPoint.x ,
+        SoMap.SetNeuronsInitialWorldPositions( MatrixSideLength , SomDimensionInTiles , TileDimension , samplingStartingPoint.x ,
             samplingStartingPoint.z , Som3DNetHeight , mapMagicGraphHeight );
 
         coroutine = SoMap.TrainCoroutine( InputMatrix );

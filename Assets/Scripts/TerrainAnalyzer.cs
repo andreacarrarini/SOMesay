@@ -23,6 +23,9 @@ using System;
 public class TerrainAnalyzer : MonoBehaviour
 {
     private TerrainSampler terrainSampler;
+    private int smallerNeuronsNumber = 5;
+    private int smallerNeuronsSamplingStep;
+
     public enum tiles
     {
         DOWNLEFT,
@@ -32,10 +35,13 @@ public class TerrainAnalyzer : MonoBehaviour
     }
 
     public TerrainSampler TerrainSampler { get => terrainSampler; set => terrainSampler = value; }
+    public int SmallerNeurons { get => smallerNeuronsNumber; set => smallerNeuronsNumber = value; }
 
     private void Start()
     {
         TerrainSampler = gameObject.GetComponent<TerrainSampler>();
+
+        smallerNeuronsSamplingStep = TerrainSampler.SomDimensionInTiles * TerrainSampler.TileDimension / TerrainSampler.MatrixSideLength / smallerNeuronsNumber;
     }
 
     public void AnalyzeTerrainUnderNodes( SOMap soMap )
@@ -264,7 +270,8 @@ public class TerrainAnalyzer : MonoBehaviour
                 //Neuron upNeuron = terrainSampler.SoMap.GetNeuron( i , j + 1 ) as Neuron;
 
                 // thicken the grid on up-left, down-left and down-right tiles (in addition to the up-right)
-                if ( centralNeuron.terrainType == Neuron.TerrainType.PLAIN && leftNeuron.terrainType != Neuron.TerrainType.PLAIN && downNeuron.terrainType != Neuron.TerrainType.PLAIN )
+                if ( centralNeuron.terrainType == Neuron.TerrainType.PLAIN && leftNeuron.terrainType != Neuron.TerrainType.PLAIN
+                    && downNeuron.terrainType != Neuron.TerrainType.PLAIN )
                 {
                     //downLeft = true;
                     //upLeft = true;
@@ -273,17 +280,17 @@ public class TerrainAnalyzer : MonoBehaviour
                     #region tiles
 
                     // down-left tile
-                    Vector3[,] downLeftTile = new Vector3[ 10 , 10 ];
+                    Vector3[,] downLeftTile = new Vector3[ smallerNeuronsNumber , smallerNeuronsNumber ];
 
                     downLeftTile = ManageNetTile( downLeftTile , tiles.DOWNLEFT , i , j );
 
                     // up-left tile
-                    Vector3[,] upLeftTile = new Vector3[ 10 , 10 ];
+                    Vector3[,] upLeftTile = new Vector3[ smallerNeuronsNumber , smallerNeuronsNumber ];
 
                     upLeftTile = ManageNetTile( upLeftTile , tiles.UPLEFT , i , j );
 
                     // down-right tile
-                    Vector3[,] downRightTile = new Vector3[ 10 , 10 ];
+                    Vector3[,] downRightTile = new Vector3[ smallerNeuronsNumber , smallerNeuronsNumber ];
 
                     downRightTile = ManageNetTile( downRightTile , tiles.DOWNRIGHT , i , j );
 
@@ -291,14 +298,15 @@ public class TerrainAnalyzer : MonoBehaviour
                 }
 
                 // thicken only up-left (in addition to the up-right)
-                else if ( centralNeuron.terrainType == Neuron.TerrainType.PLAIN && leftNeuron.terrainType != Neuron.TerrainType.PLAIN && downNeuron.terrainType == Neuron.TerrainType.PLAIN )
+                else if ( centralNeuron.terrainType == Neuron.TerrainType.PLAIN && leftNeuron.terrainType != Neuron.TerrainType.PLAIN
+                    && downNeuron.terrainType == Neuron.TerrainType.PLAIN )
                 {
                     //upLeft = true;
 
                     #region tiles
 
                     // up-left tile
-                    Vector3[,] upLeftTile = new Vector3[ 10 , 10 ];
+                    Vector3[,] upLeftTile = new Vector3[ smallerNeuronsNumber , smallerNeuronsNumber ];
 
                     upLeftTile = ManageNetTile( upLeftTile , tiles.UPLEFT , i , j );
 
@@ -306,14 +314,15 @@ public class TerrainAnalyzer : MonoBehaviour
                 }
 
                 // thicken only down-right (in addition to the up-right)
-                else if ( centralNeuron.terrainType == Neuron.TerrainType.PLAIN && leftNeuron.terrainType == Neuron.TerrainType.PLAIN && downNeuron.terrainType != Neuron.TerrainType.PLAIN )
+                else if ( centralNeuron.terrainType == Neuron.TerrainType.PLAIN && leftNeuron.terrainType == Neuron.TerrainType.PLAIN
+                    && downNeuron.terrainType != Neuron.TerrainType.PLAIN )
                 {
                     //downRight = true;
 
                     #region tiles
 
                     // down-right tile
-                    Vector3[,] downRightTile = new Vector3[ 10 , 10 ];
+                    Vector3[,] downRightTile = new Vector3[ smallerNeuronsNumber , smallerNeuronsNumber ];
 
                     downRightTile = ManageNetTile( downRightTile , tiles.DOWNRIGHT , i , j );
 
@@ -325,7 +334,7 @@ public class TerrainAnalyzer : MonoBehaviour
                 {
                     #region tiles
 
-                    Vector3[,] upRightTile = new Vector3[ 10 , 10 ];
+                    Vector3[,] upRightTile = new Vector3[ smallerNeuronsNumber , smallerNeuronsNumber ];
 
                     upRightTile = ManageNetTile( upRightTile , tiles.UPRIGHT , i , j );
 
@@ -337,6 +346,8 @@ public class TerrainAnalyzer : MonoBehaviour
 
     public Vector3[,] ManageNetTile( Vector3[,] tile , tiles whichTile , int i , int j )
     {
+
+
         switch ( whichTile )
         {
             case tiles.DOWNLEFT:
@@ -345,11 +356,11 @@ public class TerrainAnalyzer : MonoBehaviour
                 {
                     Neuron downLeftNeuron = terrainSampler.SoMap.GetNeuron( i - 1 , j - 1 ) as Neuron;
                     Vector3 downLeftNeuronWorldPosition = downLeftNeuron.GetworldPosition();
-                    for ( int x = 0; x < 10; x++ )
+                    for ( int x = 0; x < smallerNeuronsNumber; x++ )
                     {
-                        for ( int z = 0; z < 10; z++ )
+                        for ( int z = 0; z < smallerNeuronsNumber; z++ )
                         {
-                            Vector3 pointToSample = downLeftNeuronWorldPosition + new Vector3( x * 40 , 0 , z * 40 );
+                            Vector3 pointToSample = downLeftNeuronWorldPosition + new Vector3( x * smallerNeuronsSamplingStep , 0 , z * smallerNeuronsSamplingStep );
                             pointToSample.y = TerrainSampler.Terrains[ terrainSampler.GetTerrainsIndexByPoint( pointToSample ) ].SampleHeight( pointToSample );
 
                             tile[ x , z ] = pointToSample;
@@ -371,11 +382,11 @@ public class TerrainAnalyzer : MonoBehaviour
                 {
                     Neuron leftNeuron = terrainSampler.SoMap.GetNeuron( i - 1 , j ) as Neuron;
                     Vector3 leftNeuronWorldPosition = leftNeuron.GetworldPosition();
-                    for ( int x = 0; x < 10; x++ )
+                    for ( int x = 0; x < smallerNeuronsNumber; x++ )
                     {
-                        for ( int z = 0; z < 10; z++ )
+                        for ( int z = 0; z < smallerNeuronsNumber; z++ )
                         {
-                            Vector3 pointToSample = leftNeuronWorldPosition + new Vector3( x * 40 , 0 , z * 40 );
+                            Vector3 pointToSample = leftNeuronWorldPosition + new Vector3( x * smallerNeuronsSamplingStep , 0 , z * smallerNeuronsSamplingStep );
                             pointToSample.y = TerrainSampler.Terrains[ terrainSampler.GetTerrainsIndexByPoint( pointToSample ) ].SampleHeight( pointToSample );
 
                             tile[ x , z ] = pointToSample;
@@ -397,11 +408,11 @@ public class TerrainAnalyzer : MonoBehaviour
                 {
                     Neuron downNeuron = terrainSampler.SoMap.GetNeuron( i , j - 1 ) as Neuron;
                     Vector3 downNeuronWorldPosition = downNeuron.GetworldPosition();
-                    for ( int x = 0; x < 10; x++ )
+                    for ( int x = 0; x < smallerNeuronsNumber; x++ )
                     {
-                        for ( int z = 0; z < 10; z++ )
+                        for ( int z = 0; z < smallerNeuronsNumber; z++ )
                         {
-                            Vector3 pointToSample = downNeuronWorldPosition + new Vector3( x * 40 , 0 , z * 40 );
+                            Vector3 pointToSample = downNeuronWorldPosition + new Vector3( x * smallerNeuronsSamplingStep , 0 , z * smallerNeuronsSamplingStep );
                             pointToSample.y = TerrainSampler.Terrains[ terrainSampler.GetTerrainsIndexByPoint( pointToSample ) ].SampleHeight( pointToSample );
 
                             tile[ x , z ] = pointToSample;
@@ -423,11 +434,11 @@ public class TerrainAnalyzer : MonoBehaviour
                 {
                     Neuron centralNeuron = terrainSampler.SoMap.GetNeuron( i , j ) as Neuron;
                     Vector3 centralNeuronWorldPosition = centralNeuron.GetworldPosition();
-                    for ( int x = 0; x < 10; x++ )
+                    for ( int x = 0; x < smallerNeuronsNumber; x++ )
                     {
-                        for ( int z = 0; z < 10; z++ )
+                        for ( int z = 0; z < smallerNeuronsNumber; z++ )
                         {
-                            Vector3 pointToSample = centralNeuronWorldPosition + new Vector3( x * 40 , 0 , z * 40 );
+                            Vector3 pointToSample = centralNeuronWorldPosition + new Vector3( x * smallerNeuronsSamplingStep , 0 , z * smallerNeuronsSamplingStep );
                             pointToSample.y = TerrainSampler.Terrains[ terrainSampler.GetTerrainsIndexByPoint( pointToSample ) ].SampleHeight( pointToSample );
 
                             tile[ x , z ] = pointToSample;
@@ -450,19 +461,22 @@ public class TerrainAnalyzer : MonoBehaviour
     // Build the visual net for the single tile and classify the nodes
     public void BuildSingleTileNet( Vector3[,] tile )
     {
-        GameObject[,] neuronPointsTile = new GameObject[ 10 , 10 ];
-        GameObject[,] horizontalLinksTile = new GameObject[ 10 , 10 ];
-        GameObject[,] verticalLinksTile = new GameObject[ 10 , 10 ];
+        GameObject[,] neuronPointsTile = new GameObject[ smallerNeuronsNumber , smallerNeuronsNumber ];
+        GameObject[,] horizontalLinksTile = new GameObject[ smallerNeuronsNumber , smallerNeuronsNumber ];
+        GameObject[,] verticalLinksTile = new GameObject[ smallerNeuronsNumber , smallerNeuronsNumber ];
 
         GameObject neuronPoint = ( GameObject ) Resources.Load( "NeuronPoint" );
         GameObject neuronLink = ( GameObject ) Resources.Load( "NeuronLinkFather" );
 
+        Vector3 horizontalLinkTileDirection = new Vector3();
+        Vector3 verticalLinkTileDirection = new Vector3();
+
         // Smaller than the basic neurons
         int neuronPointScale = 10;
 
-        for ( int j = 0; j < 10; j++ )
+        for ( int j = 0; j < smallerNeuronsNumber; j++ )
         {
-            for ( int i = 0; i < 10; i++ )
+            for ( int i = 0; i < smallerNeuronsNumber; i++ )
             {
                 neuronPointsTile[ i , j ] = Instantiate( neuronPoint , new Vector3( 0 , 0 , 0 ) , Quaternion.identity );
                 neuronPointsTile[ i , j ].transform.localScale = new Vector3( neuronPointScale , neuronPointScale , neuronPointScale );
@@ -472,21 +486,25 @@ public class TerrainAnalyzer : MonoBehaviour
                 verticalLinksTile[ i , j ] = Instantiate( neuronLink , new Vector3( 0 , 0 , 0 ) , Quaternion.identity );
 
                 // Need better way
-                if ( i < 9 && j < 9 )
+                if ( i < smallerNeuronsNumber - 1 && j < smallerNeuronsNumber - 1 )
                 {
                     // Links Position
-                    horizontalLinksTile[ i , j ].transform.position = (tile[ i + 1 , j ] - tile[ i , j ]) / 2;
-                    verticalLinksTile[ i , j ].transform.position = (tile[ i , j + 1 ] - tile[ i , j ]) / 2;
+                    horizontalLinksTile[ i , j ].transform.position = (tile[ i + 1 , j ] + tile[ i , j ]) / 2;
+                    verticalLinksTile[ i , j ].transform.position = (tile[ i , j + 1 ] + tile[ i , j ]) / 2;
+
+                    // Links Direction
+                    horizontalLinkTileDirection = (tile[ i + 1 , j ] - tile[ i , j ]) / 2;
+                    verticalLinkTileDirection = (tile[ i , j + 1 ] - tile[ i , j ]) / 2;
                 }
 
                 // Links Rotation
-                horizontalLinksTile[ i , j ].transform.rotation = Quaternion.LookRotation( horizontalLinksTile[ i , j ].transform.position ,
+                horizontalLinksTile[ i , j ].transform.rotation = Quaternion.LookRotation( horizontalLinkTileDirection ,
                     horizontalLinksTile[ i , j ].transform.forward );
-                verticalLinksTile[ i , j ].transform.rotation = Quaternion.LookRotation( verticalLinksTile[ i , j ].transform.position ,
+                verticalLinksTile[ i , j ].transform.rotation = Quaternion.LookRotation( verticalLinkTileDirection ,
                     verticalLinksTile[ i , j ].transform.forward );
 
                 // Need better way
-                if ( i < 9 && j < 9 )
+                if ( i < smallerNeuronsNumber - 1 && j < smallerNeuronsNumber - 1 )
                 {
                     // Links Scale
                     horizontalLinksTile[ i , j ].transform.localScale = new Vector3( 5 , 5 , ((tile[ i + 1 , j ] - tile[ i , j ]) / 2).magnitude );
