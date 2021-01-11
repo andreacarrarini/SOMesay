@@ -722,7 +722,244 @@ public class TerrainAnalyzer : MonoBehaviour
                 }
                 #endregion
 
-                // TODO Same switch with the the upper right corner of the tiles
+                #region Upper right corner connection between tiles
+
+                #region Vertical connection
+
+                else if ( i == smallerNeuronsNumber - 1 && j == smallerNeuronsNumber - 1 )
+                {
+                    switch ( tileType )
+                    {
+                        case tiles.UPLEFT:
+
+                            // Check if we are at the border of the SOM matrix
+                            if ( neuron.Y < TerrainSampler.MatrixSideLength - 1 )
+                            {
+                                upNeuron = terrainSampler.SoMap.GetNeuron( neuron.X , neuron.Y + 1 ) as Neuron;
+
+                                // Links Position
+                                if ( upNeuron.UpLeftTile != null )
+                                    verticalLinksTile[ i , j ].transform.position = (upNeuron.UpLeftTile[ i , 0 ] + tile[ i , j ]) / 2;
+                                horizontalLinksTile[ i , j ].transform.position = (neuron.UpRightTile[ 0 , j ] + tile[ i , j ]) / 2;
+
+                                // Links Direction
+                                if ( upNeuron.UpLeftTile != null )
+                                    verticalLinkTileDirection = (upNeuron.UpLeftTile[ i , 0 ] - tile[ i , j ]) / 2;
+                                horizontalLinkTileDirection = (neuron.UpRightTile[ 0 , j ] - tile[ i , j ]) / 2;
+
+                                // Links Scale
+                                if ( upNeuron.UpLeftTile != null )
+                                    verticalLinksTile[ i , j ].transform.localScale = new Vector3( 5 , 5 , ((upNeuron.UpLeftTile[ i , 0 ] - tile[ i , j ]) / 2).magnitude );
+                                horizontalLinksTile[ i , j ].transform.localScale = new Vector3( 5 , 5 , ((neuron.UpRightTile[ 0 , j ] - tile[ i , j ]) / 2).magnitude );
+                            }
+
+                            break;
+
+                        case tiles.DOWNLEFT:
+
+                            // Links Position
+                            if ( neuron.UpLeftTile != null )
+                                verticalLinksTile[ i , j ].transform.position = (neuron.UpLeftTile[ i , 0 ] + tile[ i , j ]) / 2;
+                            horizontalLinksTile[ i , j ].transform.position = (neuron.DownRightTile[ 0 , j ] + tile[ i , j ]) / 2;
+
+                            // Links Direction
+                            if ( neuron.UpLeftTile != null )
+                                verticalLinkTileDirection = (neuron.UpLeftTile[ i , 0 ] - tile[ i , j ]) / 2;
+                            horizontalLinkTileDirection = (neuron.DownRightTile[ 0 , j ] - tile[ i , j ]) / 2;
+
+                            // Links Scale
+                            if ( neuron.UpLeftTile != null )
+                                verticalLinksTile[ i , j ].transform.localScale = new Vector3( 5 , 5 , ((neuron.UpLeftTile[ i , 0 ] - tile[ i , j ]) / 2).magnitude );
+                            horizontalLinksTile[ i , j ].transform.localScale = new Vector3( 5 , 5 , ((neuron.DownRightTile[ 0 , j ] - tile[ i , j ]) / 2).magnitude );
+
+                            break;
+
+                        case tiles.UPRIGHT:
+
+                            // Check if we are at the border of the SOM matrix
+                            if ( neuron.Y < TerrainSampler.MatrixSideLength - 1 && neuron.X < TerrainSampler.MatrixSideLength - 1 )
+                            {
+                                upNeuron = terrainSampler.SoMap.GetNeuron( neuron.X , neuron.Y + 1 ) as Neuron;
+                                rightNeuron = terrainSampler.SoMap.GetNeuron( neuron.X + 1 , neuron.Y ) as Neuron;
+
+
+                                // Links Position
+                                if ( upNeuron.UpRightTile != null && rightNeuron.UpRightTile != null )
+                                {
+                                    verticalLinksTile[ i , j ].transform.position = (upNeuron.UpRightTile[ i , 0 ] + tile[ i , j ]) / 2;
+                                    horizontalLinksTile[ i , j ].transform.position = (rightNeuron.UpRightTile[ 0 , j ] + tile[ i , j ]) / 2;
+                                }
+
+                                // Links Direction
+                                if ( upNeuron.UpRightTile != null && rightNeuron.UpRightTile != null )
+                                {
+                                    verticalLinkTileDirection = (upNeuron.UpRightTile[ i , 0 ] - tile[ i , j ]) / 2;
+                                    horizontalLinkTileDirection = (rightNeuron.UpRightTile[ 0 , j ] - tile[ i , j ]) / 2;
+                                }
+
+                                // Links Scale
+                                if ( upNeuron.UpRightTile != null && rightNeuron.UpRightTile != null )
+                                {
+                                    verticalLinksTile[ i , j ].transform.localScale = new Vector3( 5 , 5 , ((upNeuron.UpRightTile[ i , 0 ] - tile[ i , j ]) / 2).magnitude );
+                                    horizontalLinksTile[ i , j ].transform.localScale = new Vector3( 5 , 5 , ((rightNeuron.UpRightTile[ 0 , j ] - tile[ i , j ]) / 2).magnitude );
+                                }
+                            }
+
+                            break;
+
+                        case tiles.DOWNRIGHT:
+
+                            // Check if we are at the border of the SOM matrix
+                            if ( neuron.X < TerrainSampler.MatrixSideLength - 1 )
+                            {
+                                rightNeuron = terrainSampler.SoMap.GetNeuron( neuron.X + 1 , neuron.Y ) as Neuron;
+
+                                // Links Position
+                                if ( neuron.UpRightTile != null && rightNeuron.DownRightTile != null )
+                                {
+                                    verticalLinksTile[ i , j ].transform.position = (neuron.UpRightTile[ i , 0 ] + tile[ i , j ]) / 2;
+                                    horizontalLinksTile[ i , j ].transform.position = (rightNeuron.DownRightTile[ 0 , j ] + tile[ i , j ]) / 2;
+                                }
+
+                                // Links Direction
+                                if ( neuron.UpRightTile != null && rightNeuron.DownRightTile != null )
+                                {
+                                    verticalLinkTileDirection = (neuron.UpRightTile[ i , 0 ] - tile[ i , j ]) / 2;
+                                    horizontalLinkTileDirection = (rightNeuron.DownRightTile[ 0 , j ] - tile[ i , j ]) / 2;
+                                }
+
+                                // Links Scale
+                                if ( neuron.UpRightTile != null && rightNeuron.DownRightTile != null )
+                                {
+                                    verticalLinksTile[ i , j ].transform.localScale = new Vector3( 5 , 5 , ((neuron.UpRightTile[ i , 0 ] - tile[ i , j ]) / 2).magnitude );
+                                    horizontalLinksTile[ i , j ].transform.localScale = new Vector3( 5 , 5 , ((rightNeuron.DownRightTile[ 0 , j ] - tile[ i , j ]) / 2).magnitude );
+                                }
+                            }
+
+                            break;
+                    }
+                }
+                #endregion
+
+                #region Horizontal connection
+
+                else if ( i == smallerNeuronsNumber - 1 && j == smallerNeuronsNumber - 1 )
+                {
+                    switch ( tileType )
+                    {
+                        case tiles.UPLEFT:
+
+                            // Check if we are at the border of the SOM matrix
+                            if ( neuron.Y < TerrainSampler.MatrixSideLength - 1 )
+                            {
+                                upNeuron = terrainSampler.SoMap.GetNeuron( neuron.X , neuron.Y + 1 ) as Neuron;
+
+                                // Links Position
+                                if ( neuron.UpRightTile != null && upNeuron.UpLeftTile != null )
+                                {
+                                    horizontalLinksTile[ i , j ].transform.position = (neuron.UpRightTile[ 0 , j ] + tile[ i , j ]) / 2;
+                                    verticalLinksTile[ i , j ].transform.position = (upNeuron.UpLeftTile[ i , 0 ] + tile[ i , j ]) / 2;
+                                }
+
+                                // Links Direction
+                                if ( neuron.UpRightTile != null && upNeuron.UpLeftTile != null )
+                                {
+                                    horizontalLinkTileDirection = (neuron.UpRightTile[ 0 , j ] - tile[ i , j ]) / 2;
+                                    verticalLinkTileDirection = (upNeuron.UpLeftTile[ i , 0 ] - tile[ i , j ]) / 2;
+                                }
+
+                                // Links Scale
+                                if ( neuron.UpRightTile != null && upNeuron.UpLeftTile != null )
+                                {
+                                    horizontalLinksTile[ i , j ].transform.localScale = new Vector3( 5 , 5 , ((neuron.UpRightTile[ 0 , j ] - tile[ i , j ]) / 2).magnitude );
+                                    verticalLinksTile[ i , j ].transform.localScale = new Vector3( 5 , 5 , ((upNeuron.UpLeftTile[ i , 0 ] - tile[ i , j ]) / 2).magnitude );
+                                }
+                            }
+
+                            break;
+
+                        case tiles.DOWNLEFT:
+
+                            // Links Position
+                            if ( neuron.DownRightTile != null )
+                                horizontalLinksTile[ i , j ].transform.position = (neuron.DownRightTile[ 0 , j ] + tile[ i , j ]) / 2;
+                            verticalLinksTile[ i , j ].transform.position = (neuron.UpLeftTile[ i , 0 ] + tile[ i , j ]) / 2;
+
+                            // Links Direction
+                            if ( neuron.DownRightTile != null )
+                                horizontalLinkTileDirection = (neuron.DownRightTile[ 0 , j ] - tile[ i , j ]) / 2;
+                            verticalLinkTileDirection = (neuron.UpLeftTile[ i , 0 ] - tile[ i , j ]) / 2;
+
+                            // Links Scale
+                            if ( neuron.DownRightTile != null )
+                                horizontalLinksTile[ i , j ].transform.localScale = new Vector3( 5 , 5 , ((neuron.DownRightTile[ 0 , j ] - tile[ i , j ]) / 2).magnitude );
+                            verticalLinksTile[ i , j ].transform.localScale = new Vector3( 5 , 5 , ((neuron.UpLeftTile[ i , 0 ] - tile[ i , j ]) / 2).magnitude );
+
+                            break;
+
+                        case tiles.UPRIGHT:
+
+                            // Check if we are at the border of the SOM matrix
+                            if ( neuron.X < TerrainSampler.MatrixSideLength - 1 && neuron.Y < TerrainSampler.MatrixSideLength - 1 )
+                            {
+                                rightNeuron = terrainSampler.SoMap.GetNeuron( neuron.X + 1 , neuron.Y ) as Neuron;
+                                upNeuron = terrainSampler.SoMap.GetNeuron( neuron.X , neuron.Y + 1 ) as Neuron;
+
+                                // Links Position
+                                if ( rightNeuron.UpRightTile != null && upNeuron.UpRightTile != null )
+                                {
+                                    horizontalLinksTile[ i , j ].transform.position = (rightNeuron.UpRightTile[ 0 , j ] + tile[ i , j ]) / 2;
+                                    verticalLinksTile[ i , j ].transform.position = (upNeuron.UpRightTile[ i , 0 ] + tile[ i , j ]) / 2;
+                                }
+
+                                // Links Direction
+                                if ( rightNeuron.UpRightTile != null && upNeuron.UpRightTile != null )
+                                {
+                                    horizontalLinkTileDirection = (rightNeuron.UpRightTile[ 0 , j ] - tile[ i , j ]) / 2;
+                                    verticalLinkTileDirection = (upNeuron.UpRightTile[ i , 0 ] - tile[ i , j ]) / 2;
+                                }
+
+                                // Links Scale
+                                if ( rightNeuron.UpRightTile != null && upNeuron.UpRightTile != null )
+                                {
+                                    horizontalLinksTile[ i , j ].transform.localScale = new Vector3( 5 , 5 , ((rightNeuron.UpRightTile[ 0 , j ] - tile[ i , j ]) / 2).magnitude );
+                                    verticalLinksTile[ i , j ].transform.localScale = new Vector3( 5 , 5 , ((upNeuron.UpRightTile[ i , 0 ] - tile[ i , j ]) / 2).magnitude );
+                                }
+                            }
+
+                            break;
+
+                        case tiles.DOWNRIGHT:
+
+                            // Check if we are at the border of the SOM matrix
+                            if ( neuron.X < TerrainSampler.MatrixSideLength - 1 )
+                            {
+                                rightNeuron = terrainSampler.SoMap.GetNeuron( neuron.X + 1 , neuron.Y ) as Neuron;
+
+                                // Links Position
+                                if ( rightNeuron.DownRightTile != null )
+                                    horizontalLinksTile[ i , j ].transform.position = (neuron.DownRightTile[ 0 , j ] + tile[ i , j ]) / 2;
+                                verticalLinksTile[ i , j ].transform.position = (neuron.UpRightTile[ i , 0 ] + tile[ i , j ]) / 2;
+
+                                // Links Direction
+                                if ( rightNeuron.DownRightTile != null )
+                                    horizontalLinkTileDirection = (rightNeuron.DownRightTile[ 0 , j ] - tile[ i , j ]) / 2;
+                                verticalLinkTileDirection = (neuron.UpRightTile[ i , 0 ] - tile[ i , j ]) / 2;
+
+                                // Links Scale
+                                if ( rightNeuron.DownRightTile != null )
+                                    horizontalLinksTile[ i , j ].transform.localScale = new Vector3( 5 , 5 , ((neuron.DownRightTile[ 0 , j ] - tile[ i , j ]) / 2).magnitude );
+                                verticalLinksTile[ i , j ].transform.localScale = new Vector3( 5 , 5 , ((neuron.UpRightTile[ i , 0 ] - tile[ i , j ]) / 2).magnitude );
+                            }
+
+                            break;
+                    }
+                }
+                #endregion
+
+                #endregion
+
+                // TODO Color the smaller neuron point with the same method used for big neurons
 
                 // Links Rotation
                 horizontalLinksTile[ i , j ].transform.rotation = Quaternion.LookRotation( horizontalLinkTileDirection ,
