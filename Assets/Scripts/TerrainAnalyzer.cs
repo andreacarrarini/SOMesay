@@ -959,8 +959,6 @@ public class TerrainAnalyzer : MonoBehaviour
 
                 #endregion
 
-                // TODO Color the smaller neuron point with the same method used for big neurons
-
                 // Links Rotation
                 horizontalLinksTile[ i , j ].transform.rotation = Quaternion.LookRotation( horizontalLinkTileDirection ,
                     horizontalLinksTile[ i , j ].transform.forward );
@@ -987,6 +985,89 @@ public class TerrainAnalyzer : MonoBehaviour
                 raisedPosition = verticalLinksTile[ i , j ].transform.position;
                 raisedPosition.y += TerrainSampler.Som3DNetHeight;
                 verticalLinksTile[ i , j ].transform.position = raisedPosition;
+
+                // TODO adjust the numbers to calculate slope
+                #region Coloring smaller neurons
+
+                #region Not borders
+                if ( i > 0 && j > 0 )
+                {
+                    float horizontalSLope = neuronPointsTile[ i , j ].transform.position.y - neuronPointsTile[ i - 1 , j ].transform.position.y;
+                    float verticalSLope = neuronPointsTile[ i , j ].transform.position.y - neuronPointsTile[ i , j - 1 ].transform.position.y;
+
+                    // Green - Plain
+                    if ( horizontalSLope < 50 && verticalSLope < 50 )
+                    {
+                        neuronPointsTile[ i , j ].GetComponentInChildren<MeshRenderer>().material = Resources.Load( "Materials/Plain" ) as Material;
+                    }
+
+                    // Yellow - Hill
+                    else if ( 50 <= horizontalSLope && horizontalSLope < 100 && 50 <= verticalSLope && verticalSLope < 100 )
+                    {
+                        neuronPointsTile[ i , j ].GetComponentInChildren<MeshRenderer>().material = Resources.Load( "Materials/Hill" ) as Material;
+                    }
+
+                    // Red - Unsuitable
+                    else
+                    {
+                        neuronPointsTile[ i , j ].GetComponentInChildren<MeshRenderer>().material = Resources.Load( "Materials/Unsuitable" ) as Material;
+                    }
+                }
+                #endregion Not borders
+
+                #region Horizontal border
+
+                if ( i > 0 && j == 0 )
+                {
+                    float horizontalSLope = neuronPointsTile[ i , j ].transform.position.y - neuronPointsTile[ i - 1 , j ].transform.position.y;
+
+                    // Green - Plain
+                    if ( horizontalSLope < 50 )
+                    {
+                        neuronPointsTile[ i , j ].GetComponentInChildren<MeshRenderer>().material = Resources.Load( "Materials/Plain" ) as Material;
+                    }
+
+                    // Yellow - Hill
+                    else if ( 50 <= horizontalSLope && horizontalSLope < 100 )
+                    {
+                        neuronPointsTile[ i , j ].GetComponentInChildren<MeshRenderer>().material = Resources.Load( "Materials/Hill" ) as Material;
+                    }
+
+                    // Red - Unsuitable
+                    else
+                    {
+                        neuronPointsTile[ i , j ].GetComponentInChildren<MeshRenderer>().material = Resources.Load( "Materials/Unsuitable" ) as Material;
+                    }
+                }
+                #endregion Horizontal border
+
+                #region Vertical border
+
+                if ( i == 0 && j > 0 )
+                {
+                    float verticalSLope = neuronPointsTile[ i , j ].transform.position.y - neuronPointsTile[ i , j - 1 ].transform.position.y;
+
+                    // Green - Plain
+                    if ( verticalSLope < 50 )
+                    {
+                        neuronPointsTile[ i , j ].GetComponentInChildren<MeshRenderer>().material = Resources.Load( "Materials/Plain" ) as Material;
+                    }
+
+                    // Yellow - Hill
+                    else if ( 50 <= verticalSLope && verticalSLope < 100 )
+                    {
+                        neuronPointsTile[ i , j ].GetComponentInChildren<MeshRenderer>().material = Resources.Load( "Materials/Hill" ) as Material;
+                    }
+
+                    // Red - Unsuitable
+                    else
+                    {
+                        neuronPointsTile[ i , j ].GetComponentInChildren<MeshRenderer>().material = Resources.Load( "Materials/Unsuitable" ) as Material;
+                    }
+                }
+                #endregion Vetical border
+
+                #endregion
             }
         }
     }
