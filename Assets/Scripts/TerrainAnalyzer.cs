@@ -26,6 +26,10 @@ public class TerrainAnalyzer : MonoBehaviour
     private int smallerNeuronsNumber = 5;
     private int smallerNeuronsSamplingStep;
 
+    private float smallerSlopePlain = 15;
+    private float smallerSlopeHill = 25;
+    private float smallerSlopeUnsuitable = 50;
+
     public enum tiles
     {
         DOWNLEFT,
@@ -496,6 +500,10 @@ public class TerrainAnalyzer : MonoBehaviour
 
         GameObject neuronPoint = ( GameObject ) Resources.Load( "NeuronPoint" );
         GameObject neuronLink = ( GameObject ) Resources.Load( "NeuronLinkFather" );
+
+        Material plainMaterial = Resources.Load( "Materials/Plain" ) as Material;
+        Material hillMaterial = Resources.Load( "Materials/Hill" ) as Material;
+        Material unsuitableMaterial = Resources.Load( "Materials/Unsuitable" ) as Material;
 
         Vector3 horizontalLinkTileDirection = new Vector3();
         Vector3 verticalLinkTileDirection = new Vector3();
@@ -986,23 +994,22 @@ public class TerrainAnalyzer : MonoBehaviour
                 raisedPosition.y += TerrainSampler.Som3DNetHeight;
                 verticalLinksTile[ i , j ].transform.position = raisedPosition;
 
-                // TODO adjust the numbers to calculate slope
                 #region Coloring smaller neurons
 
                 #region Not borders
                 if ( i > 0 && j > 0 )
                 {
-                    float horizontalSLope = neuronPointsTile[ i , j ].transform.position.y - neuronPointsTile[ i - 1 , j ].transform.position.y;
-                    float verticalSLope = neuronPointsTile[ i , j ].transform.position.y - neuronPointsTile[ i , j - 1 ].transform.position.y;
+                    float horizontalSLope = Mathf.Abs( neuronPointsTile[ i , j ].transform.position.y - neuronPointsTile[ i - 1 , j ].transform.position.y );
+                    float verticalSLope = Mathf.Abs( neuronPointsTile[ i , j ].transform.position.y - neuronPointsTile[ i , j - 1 ].transform.position.y );
 
                     // Green - Plain
-                    if ( horizontalSLope < 50 && verticalSLope < 50 )
+                    if ( horizontalSLope < smallerSlopePlain && verticalSLope < smallerSlopePlain )
                     {
                         neuronPointsTile[ i , j ].GetComponentInChildren<MeshRenderer>().material = Resources.Load( "Materials/Plain" ) as Material;
                     }
 
                     // Yellow - Hill
-                    else if ( 50 <= horizontalSLope && horizontalSLope < 100 && 50 <= verticalSLope && verticalSLope < 100 )
+                    else if ( smallerSlopePlain <= horizontalSLope && horizontalSLope < smallerSlopeHill && smallerSlopePlain <= verticalSLope && verticalSLope < smallerSlopeHill )
                     {
                         neuronPointsTile[ i , j ].GetComponentInChildren<MeshRenderer>().material = Resources.Load( "Materials/Hill" ) as Material;
                     }
@@ -1019,16 +1026,16 @@ public class TerrainAnalyzer : MonoBehaviour
 
                 if ( i > 0 && j == 0 )
                 {
-                    float horizontalSLope = neuronPointsTile[ i , j ].transform.position.y - neuronPointsTile[ i - 1 , j ].transform.position.y;
+                    float horizontalSLope = Mathf.Abs( neuronPointsTile[ i , j ].transform.position.y - neuronPointsTile[ i - 1 , j ].transform.position.y );
 
                     // Green - Plain
-                    if ( horizontalSLope < 50 )
+                    if ( horizontalSLope < smallerSlopePlain )
                     {
                         neuronPointsTile[ i , j ].GetComponentInChildren<MeshRenderer>().material = Resources.Load( "Materials/Plain" ) as Material;
                     }
 
                     // Yellow - Hill
-                    else if ( 50 <= horizontalSLope && horizontalSLope < 100 )
+                    else if ( smallerSlopePlain <= horizontalSLope && horizontalSLope < smallerSlopeHill )
                     {
                         neuronPointsTile[ i , j ].GetComponentInChildren<MeshRenderer>().material = Resources.Load( "Materials/Hill" ) as Material;
                     }
@@ -1045,16 +1052,16 @@ public class TerrainAnalyzer : MonoBehaviour
 
                 if ( i == 0 && j > 0 )
                 {
-                    float verticalSLope = neuronPointsTile[ i , j ].transform.position.y - neuronPointsTile[ i , j - 1 ].transform.position.y;
+                    float verticalSLope = Mathf.Abs( neuronPointsTile[ i , j ].transform.position.y - neuronPointsTile[ i , j - 1 ].transform.position.y );
 
                     // Green - Plain
-                    if ( verticalSLope < 50 )
+                    if ( verticalSLope < smallerSlopePlain )
                     {
                         neuronPointsTile[ i , j ].GetComponentInChildren<MeshRenderer>().material = Resources.Load( "Materials/Plain" ) as Material;
                     }
 
                     // Yellow - Hill
-                    else if ( 50 <= verticalSLope && verticalSLope < 100 )
+                    else if ( smallerSlopePlain <= verticalSLope && verticalSLope < smallerSlopeHill )
                     {
                         neuronPointsTile[ i , j ].GetComponentInChildren<MeshRenderer>().material = Resources.Load( "Materials/Hill" ) as Material;
                     }
@@ -1068,6 +1075,38 @@ public class TerrainAnalyzer : MonoBehaviour
                 #endregion Vetical border
 
                 #endregion
+
+                #region Coloring smaller links
+
+                #region Horizontal links
+
+                if ( i > 0 )
+                {
+                    if ( neuronPointsTile[ i , j ].GetComponentInChildren<MeshRenderer>().material.name.
+                        Contains( neuronPointsTile[ i - 1 , j ].GetComponentInChildren<MeshRenderer>().material.name ) &&
+                        neuronPointsTile[ i - 1 , j ].GetComponentInChildren<MeshRenderer>().material.name.Contains( "Plain" ) )
+                    {
+                        horizontalLinksTile[ i - 1 , j ].GetComponentInChildren<MeshRenderer>().material = plainMaterial;
+                    }
+                }
+                #endregion
+
+                #region Vertical links
+
+                if ( j > 0 )
+                {
+                    if ( neuronPointsTile[ i , j ].GetComponentInChildren<MeshRenderer>().material.name.
+                        Contains( neuronPointsTile[ i , j - 1 ].GetComponentInChildren<MeshRenderer>().material.name ) &&
+                        neuronPointsTile[ i , j - 1 ].GetComponentInChildren<MeshRenderer>().material.name.Contains( "Plain" ) )
+                    {
+                        verticalLinksTile[ i , j - 1 ].GetComponentInChildren<MeshRenderer>().material = plainMaterial;
+                    }
+                }
+                #endregion
+
+                #endregion
+
+                //TODO Make the smaller nodes that are "Unsuitable" cast a ray below them and check if it hits a building
             }
         }
     }
