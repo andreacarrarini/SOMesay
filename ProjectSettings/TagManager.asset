@@ -6,6 +6,7 @@ TagManager:
   tags:
   - MapMagic
   - MapMagic Terrain
+  - House
   layers:
   - Default
   - TransparentFX

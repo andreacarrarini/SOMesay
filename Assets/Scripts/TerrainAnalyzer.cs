@@ -30,6 +30,8 @@ public class TerrainAnalyzer : MonoBehaviour
     private float smallerSlopeHill = 25;
     private float smallerSlopeUnsuitable = 50;
 
+    private List<Transform> smallerNeuronsGeneralList;
+
     public enum tiles
     {
         DOWNLEFT,
@@ -46,6 +48,8 @@ public class TerrainAnalyzer : MonoBehaviour
         TerrainSampler = gameObject.GetComponent<TerrainSampler>();
 
         smallerNeuronsSamplingStep = TerrainSampler.SomDimensionInTiles * TerrainSampler.TileDimension / TerrainSampler.MatrixSideLength / smallerNeuronsNumber;
+
+        smallerNeuronsGeneralList = new List<Transform>();
     }
 
     public void AnalyzeTerrainUnderNodes( SOMap soMap )
@@ -387,8 +391,6 @@ public class TerrainAnalyzer : MonoBehaviour
 
     public Vector3[,] ManageNetTile( Vector3[,] tile , tiles whichTile , int i , int j )
     {
-
-
         switch ( whichTile )
         {
             case tiles.DOWNLEFT:
@@ -520,6 +522,9 @@ public class TerrainAnalyzer : MonoBehaviour
                 neuronPointsTile[ i , j ] = Instantiate( neuronPoint , new Vector3( 0 , 0 , 0 ) , Quaternion.identity );
                 neuronPointsTile[ i , j ].transform.localScale = new Vector3( neuronPointScale , neuronPointScale , neuronPointScale );
                 neuronPointsTile[ i , j ].transform.position = tile[ i , j ];
+
+                // Storing their transform
+                smallerNeuronsGeneralList.Add( neuronPointsTile[ i , j ].transform );
 
                 horizontalLinksTile[ i , j ] = Instantiate( neuronLink , new Vector3( 0 , 0 , 0 ) , Quaternion.identity );
                 verticalLinksTile[ i , j ] = Instantiate( neuronLink , new Vector3( 0 , 0 , 0 ) , Quaternion.identity );
@@ -1107,6 +1112,25 @@ public class TerrainAnalyzer : MonoBehaviour
                 #endregion
 
                 //TODO Make the smaller nodes that are "Unsuitable" cast a ray below them and check if it hits a building
+            }
+        }
+    }
+
+    public void FireRaycastFromSmallerNeurons()
+    {
+        RaycastHit hit;
+
+        foreach (Transform smallerNeuron in smallerNeuronsGeneralList )
+        {
+            if ( smallerNeuron.gameObject.GetComponentInChildren<MeshRenderer>().material.name.Contains( "Unsuitable" ) )
+            {
+                if ( Physics.Raycast( smallerNeuron.position , smallerNeuron.TransformDirection( Vector3.down ) , out hit , 1000f ) )
+                {
+                    if ( hit.collider.gameObject.tag == "House" )
+                    {
+                        Destroy( hit.collider.gameObject );
+                    }
+                }
             }
         }
     }
